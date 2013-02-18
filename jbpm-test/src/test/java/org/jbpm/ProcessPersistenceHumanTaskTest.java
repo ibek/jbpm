@@ -19,7 +19,8 @@ import org.slf4j.LoggerFactory;
  */
 public class ProcessPersistenceHumanTaskTest extends JbpmJUnitTestCase {
 
-    private Logger testLogger = LoggerFactory.getLogger(ProcessPersistenceHumanTaskTest.class);
+    private Logger testLogger = LoggerFactory
+            .getLogger(ProcessPersistenceHumanTaskTest.class);
 
     public ProcessPersistenceHumanTaskTest() {
         super(true);
@@ -31,7 +32,8 @@ public class ProcessPersistenceHumanTaskTest extends JbpmJUnitTestCase {
         StatefulKnowledgeSession ksession = createKnowledgeSession("humantask.bpmn");
         TaskService taskService = getTaskService(ksession);
 
-        ProcessInstance processInstance = ksession.startProcess("com.sample.bpmn.hello");
+        ProcessInstance processInstance = ksession
+                .startProcess("com.sample.bpmn.hello");
 
         assertProcessInstanceActive(processInstance.getId(), ksession);
         assertNodeTriggered(processInstance.getId(), "Start", "Task 1");
@@ -42,7 +44,8 @@ public class ProcessPersistenceHumanTaskTest extends JbpmJUnitTestCase {
 
         // let john execute Task 1
         String taskGroup = "en-UK";
-        List<TaskSummary> list = taskService.getTasksAssignedAsPotentialOwner("john", taskGroup);
+        List<TaskSummary> list = taskService.getTasksAssignedAsPotentialOwner(
+                "john", taskGroup);
         TaskSummary task = list.get(0);
         testLogger.debug("John is executing task " + task.getName());
         taskService.start(task.getId(), "john");
@@ -56,8 +59,10 @@ public class ProcessPersistenceHumanTaskTest extends JbpmJUnitTestCase {
 
         // let mary execute Task 2
         String taskUser = "mary";
-        list = taskService.getTasksAssignedAsPotentialOwner(taskUser, taskGroup);
-        assertTrue("No tasks found for potential owner " + taskUser + "/" + taskGroup, list.size() > 0);
+        list = taskService
+                .getTasksAssignedAsPotentialOwner(taskUser, taskGroup);
+        assertTrue("No tasks found for potential owner " + taskUser + "/"
+                + taskGroup, list.size() > 0);
         task = list.get(0);
         testLogger.debug("Mary is executing task " + task.getName());
         taskService.start(task.getId(), "mary");
@@ -72,13 +77,16 @@ public class ProcessPersistenceHumanTaskTest extends JbpmJUnitTestCase {
         StatefulKnowledgeSession ksession = createKnowledgeSession("humantask.bpmn");
         TaskService taskService = getTaskService(ksession);
 
-        UserTransaction ut = (UserTransaction) new InitialContext().lookup("java:comp/UserTransaction");
+        UserTransaction ut = (UserTransaction) new InitialContext()
+                .lookup("java:comp/UserTransaction");
         ut.begin();
-        ProcessInstance processInstance = ksession.startProcess("com.sample.bpmn.hello");
+        ProcessInstance processInstance = ksession
+                .startProcess("com.sample.bpmn.hello");
         ut.rollback();
 
         assertNull(ksession.getProcessInstance(processInstance.getId()));
-        List<TaskSummary> list = taskService.getTasksAssignedAsPotentialOwner("john", "en-UK");
+        List<TaskSummary> list = taskService.getTasksAssignedAsPotentialOwner(
+                "john", "en-UK");
         assertEquals(0, list.size());
     }
 

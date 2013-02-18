@@ -18,7 +18,8 @@ import org.slf4j.LoggerFactory;
  */
 public class ProcessPersistenceHumanTaskOnLaneTest extends JbpmJUnitTestCase {
 
-    private Logger testLogger = LoggerFactory.getLogger(ProcessPersistenceHumanTaskOnLaneTest.class);
+    private Logger testLogger = LoggerFactory
+            .getLogger(ProcessPersistenceHumanTaskOnLaneTest.class);
 
     public ProcessPersistenceHumanTaskOnLaneTest() {
         super(true);
@@ -33,7 +34,6 @@ public class ProcessPersistenceHumanTaskOnLaneTest extends JbpmJUnitTestCase {
         ProcessInstance processInstance = ksession.startProcess("UserTask");
 
         assertProcessInstanceActive(processInstance.getId(), ksession);
-        
 
         // simulating a system restart
         ksession = restoreSession(ksession, true);
@@ -42,15 +42,14 @@ public class ProcessPersistenceHumanTaskOnLaneTest extends JbpmJUnitTestCase {
         // let john execute Task 1
         String taskUser = "john";
         String locale = "en-UK";
-        List<TaskSummary> list = taskService.getTasksAssignedAsPotentialOwner(taskUser, locale);
+        List<TaskSummary> list = taskService.getTasksAssignedAsPotentialOwner(
+                taskUser, locale);
         assertEquals(1, list.size());
-        
+
         TaskSummary task = list.get(0);
         taskService.claim(task.getId(), taskUser);
         taskService.start(task.getId(), taskUser);
         taskService.complete(task.getId(), taskUser, null);
-
-
 
         // simulating a system restart
         ksession = restoreSession(ksession, true);
@@ -58,17 +57,15 @@ public class ProcessPersistenceHumanTaskOnLaneTest extends JbpmJUnitTestCase {
         List<Status> reservedOnly = new ArrayList<Status>();
         reservedOnly.add(Status.Reserved);
 
-        
-        list = taskService.getTasksAssignedAsPotentialOwnerByStatus(taskUser, reservedOnly, locale);
+        list = taskService.getTasksAssignedAsPotentialOwnerByStatus(taskUser,
+                reservedOnly, locale);
         assertEquals(1, list.size());
-        
+
         task = list.get(0);
         taskService.start(task.getId(), taskUser);
         taskService.complete(task.getId(), taskUser, null);
 
-
         assertProcessInstanceCompleted(processInstance.getId(), ksession);
     }
-
 
 }

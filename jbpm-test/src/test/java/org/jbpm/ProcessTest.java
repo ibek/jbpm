@@ -10,13 +10,15 @@ import org.kie.runtime.process.ProcessInstance;
  */
 public class ProcessTest extends JbpmJUnitTestCase {
 
-	@Test
+    @Test
     public void testProcess() {
         StatefulKnowledgeSession ksession = createKnowledgeSession("hello.bpmn");
-        ProcessInstance processInstance = ksession.startProcess("com.sample.bpmn.hello");
+        ProcessInstance processInstance = ksession
+                .startProcess("com.sample.bpmn.hello");
         // check whether the process instance has completed successfully
         assertProcessInstanceCompleted(processInstance.getId(), ksession);
-        assertNodeTriggered(processInstance.getId(), "StartProcess", "Hello", "EndProcess");
+        assertNodeTriggered(processInstance.getId(), "StartProcess", "Hello",
+                "EndProcess");
     }
 
 }
