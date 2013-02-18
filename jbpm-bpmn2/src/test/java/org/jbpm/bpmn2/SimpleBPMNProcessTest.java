@@ -192,53 +192,11 @@ public class SimpleBPMNProcessTest extends JbpmBpmn2TestCase {
         ksession.getWorkItemManager().completeWorkItem(handler.getWorkItem().getId(), null);
         assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
     }
-    
-	public void testMinimalProcess() throws Exception {
-		KnowledgeBase kbase = createKnowledgeBase("BPMN2-MinimalProcess.bpmn2");
-		StatefulKnowledgeSession ksession = createKnowledgeSession(kbase);
-		ProcessInstance processInstance = ksession.startProcess("Minimal");
-		assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
-	}
-
-	public void testMinimalProcessImplicit() throws Exception {
-		KnowledgeBase kbase = createKnowledgeBase("BPMN2-MinimalProcessImplicit.bpmn2");
-		StatefulKnowledgeSession ksession = createKnowledgeSession(kbase);
-		ProcessInstance processInstance = ksession.startProcess("Minimal");
-		assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
-	}
 
 	public void testImplicitEndParallel() throws Exception {
 		KnowledgeBase kbase = createKnowledgeBase("BPMN2-ParallelSplit.bpmn2");
 		StatefulKnowledgeSession ksession = createKnowledgeSession(kbase);
 		ProcessInstance processInstance = ksession.startProcess("com.sample.test");
-		assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
-	}
-
-	public void testMinimalProcessWithGraphical() throws Exception {
-		KnowledgeBase kbase = createKnowledgeBase("BPMN2-MinimalProcessWithGraphical.bpmn2");
-		StatefulKnowledgeSession ksession = createKnowledgeSession(kbase);
-		ProcessInstance processInstance = ksession.startProcess("Minimal");
-		assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
-	}
-
-	public void testMinimalProcessWithDIGraphical() throws Exception {
-		KnowledgeBase kbase = createKnowledgeBase("BPMN2-MinimalProcessWithDIGraphical.bpmn2");
-		StatefulKnowledgeSession ksession = createKnowledgeSession(kbase);
-		ProcessInstance processInstance = ksession.startProcess("Minimal");
-		assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
-	}
-
-	public void testCompositeProcessWithDIGraphical() throws Exception {
-		KnowledgeBase kbase = createKnowledgeBase("BPMN2-CompositeProcessWithDIGraphical.bpmn2");
-		StatefulKnowledgeSession ksession = createKnowledgeSession(kbase);
-		ProcessInstance processInstance = ksession.startProcess("Composite");
-		assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
-	}
-
-	public void testScriptTask() throws Exception {
-		KnowledgeBase kbase = createKnowledgeBase("BPMN2-ScriptTask.bpmn2");
-		StatefulKnowledgeSession ksession = createKnowledgeSession(kbase);
-		ProcessInstance processInstance = ksession.startProcess("ScriptTask");
 		assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
 	}
 
@@ -1233,82 +1191,6 @@ public class SimpleBPMNProcessTest extends JbpmBpmn2TestCase {
 		receiveTaskHandler.messageReceived("NoMessage", "NoValue");
 		assertProcessInstanceCompleted(processInstance.getId(), ksession);
 		receiveTaskHandler.messageReceived("YesMessage", "YesValue");
-	}
-
-	public void testCallActivity() throws Exception {
-		KnowledgeBuilder kbuilder = KnowledgeBuilderFactory
-				.newKnowledgeBuilder();
-		kbuilder.add(ResourceFactory
-				.newClassPathResource("BPMN2-CallActivity.bpmn2"),
-				ResourceType.BPMN2);
-		kbuilder.add(ResourceFactory
-				.newClassPathResource("BPMN2-CallActivitySubProcess.bpmn2"),
-				ResourceType.BPMN2);
-		if (!kbuilder.getErrors().isEmpty()) {
-			for (KnowledgeBuilderError error : kbuilder.getErrors()) {
-				logger.error(error.toString());
-			}
-			throw new IllegalArgumentException(
-					"Errors while parsing knowledge base");
-		}
-		KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
-		kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-		StatefulKnowledgeSession ksession = createKnowledgeSession(kbase);
-		Map<String, Object> params = new HashMap<String, Object>();
-		params.put("x", "oldValue");
-		ProcessInstance processInstance = ksession.startProcess(
-				"ParentProcess", params);
-		assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
-		assertEquals("new value",
-				((WorkflowProcessInstance) processInstance).getVariable("y"));
-	}
-	
-   public void testCallActivityByName() throws Exception {
-        KnowledgeBuilder kbuilder = KnowledgeBuilderFactory
-                .newKnowledgeBuilder();
-        kbuilder.add(ResourceFactory.newClassPathResource("BPMN2-CallActivityByName.bpmn2"),
-                ResourceType.BPMN2);
-        kbuilder.add(ResourceFactory.newClassPathResource("BPMN2-CallActivitySubProcess.bpmn2"),
-                ResourceType.BPMN2);
-        kbuilder.add(ResourceFactory.newClassPathResource("BPMN2-CallActivitySubProcessV2.bpmn2"),
-                ResourceType.BPMN2);
-        if (!kbuilder.getErrors().isEmpty()) {
-            for (KnowledgeBuilderError error : kbuilder.getErrors()) {
-                logger.error(error.toString());
-            }
-            throw new IllegalArgumentException(
-                    "Errors while parsing knowledge base");
-        }
-        KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
-        kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-        StatefulKnowledgeSession ksession = createKnowledgeSession(kbase);
-        Map<String, Object> params = new HashMap<String, Object>();
-        params.put("x", "oldValue");
-        ProcessInstance processInstance = ksession.startProcess(
-                "ParentProcess", params);
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
-        assertEquals("new value V2",
-                ((WorkflowProcessInstance) processInstance).getVariable("y"));
-    }
-
-	public void testSubProcess() throws Exception {
-		KnowledgeBase kbase = createKnowledgeBase("BPMN2-SubProcess.bpmn2");
-		StatefulKnowledgeSession ksession = createKnowledgeSession(kbase);
-		ksession.addEventListener(new DefaultProcessEventListener() {
-			public void afterProcessStarted(ProcessStartedEvent event) {
-				logger.debug(event.toString());
-			}
-
-			public void beforeVariableChanged(ProcessVariableChangedEvent event) {
-				logger.debug(event.toString());
-			}
-
-			public void afterVariableChanged(ProcessVariableChangedEvent event) {
-				logger.debug(event.toString());
-			}
-		});
-		ProcessInstance processInstance = ksession.startProcess("SubProcess");
-		assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
 	}
 	
 	public void testSubProcessWithTerminateEndEvent() throws Exception {

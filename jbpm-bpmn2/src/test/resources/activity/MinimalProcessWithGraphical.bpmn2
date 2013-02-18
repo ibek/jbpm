@@ -6,44 +6,21 @@
              xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd"
+             xmlns:g="http://www.jboss.org/drools/flow/gpd"
              xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
              xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
              xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
              xmlns:tns="http://www.jboss.org/drools">
 
-  <itemDefinition id="_xItem" structureRef="String" />
-  <itemDefinition id="_yItem" structureRef="String" />
-
-  <process processType="Private" isExecutable="true" id="ParentProcess" name="Parent Process" >
-
-    <!-- process variables -->
-    <property id="x" itemSubjectRef="_xItem"/>
-    <property id="y" itemSubjectRef="_yItem"/>
+  <process processType="Private" isExecutable="true" id="MinimalWithGraphical" name="Minimal Process" >
 
     <!-- nodes -->
     <startEvent id="_1" name="StartProcess" />
-    <callActivity id="_2" name="CallActivity" calledElement="SubProcess" >
-      <ioSpecification>
-        <dataInput id="_2_subXInput" name="subX" />
-        <dataOutput id="_2_subYOutput" name="subY" />
-        <inputSet>
-          <dataInputRefs>_2_subXInput</dataInputRefs>
-        </inputSet>
-        <outputSet>
-          <dataOutputRefs>_2_subYOutput</dataOutputRefs>
-        </outputSet>
-      </ioSpecification>
-      <dataInputAssociation>
-        <sourceRef>x</sourceRef>
-        <targetRef>_2_subXInput</targetRef>
-      </dataInputAssociation>
-      <dataOutputAssociation>
-        <sourceRef>_2_subYOutput</sourceRef>
-        <targetRef>y</targetRef>
-      </dataOutputAssociation>
-    </callActivity>
+    <scriptTask id="_2" name="Hello" >
+      <script>System.out.println("Hello World");</script>
+    </scriptTask>
     <endEvent id="_3" name="EndProcess" >
-        <terminateEventDefinition/>
+        <terminateEventDefinition />
     </endEvent>
 
     <!-- connections -->
@@ -53,23 +30,24 @@
   </process>
 
   <bpmndi:BPMNDiagram>
-    <bpmndi:BPMNPlane bpmnElement="ParentProcess" >
+    <bpmndi:BPMNPlane bpmnElement="MinimalWithGraphical" >
       <bpmndi:BPMNShape bpmnElement="_1" >
         <dc:Bounds x="16" y="16" width="48" height="48" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="_2" >
-        <dc:Bounds x="96" y="16" width="110" height="48" />
+        <dc:Bounds x="96" y="16" width="120" height="64" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="_3" >
-        <dc:Bounds x="238" y="16" width="48" height="48" />
+        <dc:Bounds x="228" y="16" width="48" height="48" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge bpmnElement="_1-_2" >
         <di:waypoint x="40" y="40" />
-        <di:waypoint x="151" y="40" />
+        <di:waypoint x="156" y="48" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="_2-_3" >
-        <di:waypoint x="151" y="40" />
-        <di:waypoint x="262" y="40" />
+        <di:waypoint x="156" y="48" />
+        <di:waypoint x="200" y="100" />
+        <di:waypoint x="252" y="40" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

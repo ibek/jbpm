@@ -6,20 +6,29 @@
              xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd"
+             xmlns:g="http://www.jboss.org/drools/flow/gpd"
              xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
              xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
              xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
              xmlns:tns="http://www.jboss.org/drools">
 
-  <process processType="Private" isExecutable="true" id="Minimal" name="Minimal Process" >
+  <itemDefinition id="_subXItem" structureRef="String" />
+  <itemDefinition id="_subYItem" structureRef="String" />
+
+  <process processType="Private" isExecutable="true" id="CallActivitySubProcessV2" name="CallActivitySubProcessV2" tns:version="2" >
+
+    <!-- process variables -->
+    <property id="subX" itemSubjectRef="_subXItem"/>
+    <property id="subY" itemSubjectRef="_subYItem"/>
 
     <!-- nodes -->
     <startEvent id="_1" name="StartProcess" />
     <scriptTask id="_2" name="Hello" >
-      <script>System.out.println("Hello World");</script>
+      <script>System.out.println("subX=" + subX);
+kcontext.setVariable("subY", "new value V2");</script>
     </scriptTask>
     <endEvent id="_3" name="EndProcess" >
-        <terminateEventDefinition/>
+        <terminateEventDefinition />
     </endEvent>
 
     <!-- connections -->
@@ -29,25 +38,23 @@
   </process>
 
   <bpmndi:BPMNDiagram>
-    <bpmndi:BPMNPlane bpmnElement="Minimal" >
+    <bpmndi:BPMNPlane bpmnElement="CallActivitySubProcessV2" >
       <bpmndi:BPMNShape bpmnElement="_1" >
-        <dc:Bounds x="15" y="91" width="48" height="48" />
+        <dc:Bounds x="16" y="16" width="48" height="48" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="_2" >
-        <dc:Bounds x="95" y="88" width="83" height="48" />
+        <dc:Bounds x="96" y="16" width="80" height="48" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="_3" >
-        <dc:Bounds x="258" y="86" width="48" height="48" />
+        <dc:Bounds x="208" y="16" width="48" height="48" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge bpmnElement="_1-_2" >
-        <di:waypoint x="39" y="115" />
-        <di:waypoint x="75" y="46" />
-        <di:waypoint x="136" y="112" />
+        <di:waypoint x="40" y="40" />
+        <di:waypoint x="136" y="40" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="_2-_3" >
-        <di:waypoint x="136" y="112" />
-        <di:waypoint x="240" y="240" />
-        <di:waypoint x="282" y="110" />
+        <di:waypoint x="136" y="40" />
+        <di:waypoint x="232" y="40" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

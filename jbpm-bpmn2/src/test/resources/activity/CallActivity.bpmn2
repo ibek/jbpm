@@ -6,6 +6,7 @@
              xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd"
+             xmlns:g="http://www.jboss.org/drools/flow/gpd"
              xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
              xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
              xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
@@ -14,7 +15,7 @@
   <itemDefinition id="_xItem" structureRef="String" />
   <itemDefinition id="_yItem" structureRef="String" />
 
-  <process processType="Private" isExecutable="true" id="ParentProcess" name="Parent Process" >
+  <process processType="Private" isExecutable="true" id="CallActivity" name="Parent Process" >
 
     <!-- process variables -->
     <property id="x" itemSubjectRef="_xItem"/>
@@ -22,7 +23,7 @@
 
     <!-- nodes -->
     <startEvent id="_1" name="StartProcess" />
-    <callActivity id="_2" name="CallActivity" tns:calledElementByName="Sub Process" >
+    <callActivity id="_2" name="CallActivity" calledElement="CallActivitySubProcess" >
       <ioSpecification>
         <dataInput id="_2_subXInput" name="subX" />
         <dataOutput id="_2_subYOutput" name="subY" />
@@ -43,7 +44,7 @@
       </dataOutputAssociation>
     </callActivity>
     <endEvent id="_3" name="EndProcess" >
-        <terminateEventDefinition/>
+        <terminateEventDefinition />
     </endEvent>
 
     <!-- connections -->
@@ -53,7 +54,7 @@
   </process>
 
   <bpmndi:BPMNDiagram>
-    <bpmndi:BPMNPlane bpmnElement="ParentProcess" >
+    <bpmndi:BPMNPlane bpmnElement="CallActivity" >
       <bpmndi:BPMNShape bpmnElement="_1" >
         <dc:Bounds x="16" y="16" width="48" height="48" />
       </bpmndi:BPMNShape>
