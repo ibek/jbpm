@@ -11,7 +11,7 @@ import org.kie.runtime.process.ProcessInstance;
 public class ProcessTest extends JbpmJUnitTestCase {
 
     @Test
-    public void testProcess() {
+    public void testProcess() throws Exception {
         StatefulKnowledgeSession ksession = createKnowledgeSession("hello.bpmn");
         ProcessInstance processInstance = ksession
                 .startProcess("com.sample.bpmn.hello");

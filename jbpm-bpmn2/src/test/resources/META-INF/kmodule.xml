@@ -3,6 +3,9 @@
          xmlns="http://jboss.org/kie/6.0.0/kmodule">
          
     <kbase name="activity"/>
+    <kbase name="data"/>
+    <kbase name="end"/>
     <kbase name="event"/>
+    <kbase name="flow"/>
     
 </kmodule>

@@ -21,7 +21,7 @@ public class ProcessHumanTaskTest extends JbpmJUnitTestCase {
     }
 
     @Test
-    public void testProcess() {
+    public void testProcess() throws Exception {
         StatefulKnowledgeSession ksession = createKnowledgeSession("humantask.bpmn");
         TaskService taskService = getTaskService(ksession);
 
@@ -53,7 +53,7 @@ public class ProcessHumanTaskTest extends JbpmJUnitTestCase {
     }
 
     @Test
-    public void testProcessWithCreatedBy() {
+    public void testProcessWithCreatedBy() throws Exception {
         StatefulKnowledgeSession ksession = createKnowledgeSession("humantaskwithcreatedby.bpmn");
         TaskService taskService = getTaskService(ksession);
         Map<String, Object> params = new HashMap<String, Object>();

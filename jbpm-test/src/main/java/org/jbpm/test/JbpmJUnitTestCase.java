@@ -25,6 +25,7 @@ import org.jbpm.task.service.local.LocalTaskService;
 import org.jbpm.task.utils.OnErrorAction;
 import org.jbpm.workflow.instance.impl.WorkflowProcessInstanceImpl;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestName;
@@ -42,6 +43,7 @@ import org.kie.persistence.jpa.JPAKnowledgeService;
 import org.kie.runtime.Environment;
 import org.kie.runtime.EnvironmentName;
 import org.kie.runtime.KieContainer;
+import org.kie.runtime.KieSession;
 import org.kie.runtime.KieSessionConfiguration;
 import org.kie.runtime.StatefulKnowledgeSession;
 import org.kie.runtime.conf.ClockTypeOption;
@@ -67,6 +69,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -86,10 +89,13 @@ public abstract class JbpmJUnitTestCase extends Assert {
 
     protected final static String EOL = System.getProperty("line.separator");
 
-    private boolean setupDataSource = false;
+    public static final boolean PERSISTENCE = Boolean.valueOf(System
+            .getProperty("org.jbpm.test.persistence", "false"));
+
+    private static boolean setupDataSource = false;
     private boolean sessionPersistence = false;
-    private H2Server server = new H2Server();
-    private org.jbpm.task.service.TaskService taskService;
+    private static H2Server server = new H2Server();
+    private static org.jbpm.task.service.TaskService taskService;
 
     private TestWorkItemHandler workItemHandler = new TestWorkItemHandler();
 
@@ -100,32 +106,27 @@ public abstract class JbpmJUnitTestCase extends Assert {
     public KnowledgeSessionCleanup ksessionCleanupRule = new KnowledgeSessionCleanup();
     protected static ThreadLocal<Set<StatefulKnowledgeSession>> knowledgeSessionSetLocal = KnowledgeSessionCleanup.knowledgeSessionSetLocal;
 
-    private EntityManagerFactory emf;
-    private PoolingDataSource ds;
+    private static EntityManagerFactory emf;
+    private static PoolingDataSource ds;
 
     @Rule
     public TestName testName = new TestName();
 
     public JbpmJUnitTestCase() {
-        this(false);
+        this(PERSISTENCE);
     }
 
-    public JbpmJUnitTestCase(boolean setupDataSource) {
-        this(setupDataSource, false);
-    }
-
-    public JbpmJUnitTestCase(boolean setupDataSource, boolean sessionPersistance) {
+    public JbpmJUnitTestCase(boolean sessionPersistance) {
         System.setProperty("jbpm.user.group.mapping",
                 "classpath:/usergroups.properties");
         System.setProperty("jbpm.usergroup.callback",
                 "org.jbpm.task.identity.DefaultUserGroupCallbackImpl");
-        this.setupDataSource = setupDataSource;
         this.sessionPersistence = sessionPersistance;
     }
 
     public static PoolingDataSource setupPoolingDataSource() {
         PoolingDataSource pds = new PoolingDataSource();
-        pds.setUniqueName("jdbc/jbpm-ds");
+        pds.setUniqueName("jdbc/testDS1");
         pds.setClassName("bitronix.tm.resource.jdbc.lrc.LrcXADataSource");
         pds.setMaxPoolSize(5);
         pds.setAllowLocalTransactions(true);
@@ -146,21 +147,16 @@ public abstract class JbpmJUnitTestCase extends Assert {
         return sessionPersistence;
     }
 
-    @Before
-    public void setUp() throws Exception {
-        if (testLogger == null) {
-            testLogger = LoggerFactory.getLogger(getClass());
-        }
-        if (setupDataSource) {
-            server.start();
-            ds = setupPoolingDataSource();
-            emf = Persistence
-                    .createEntityManagerFactory("org.jbpm.persistence.jpa");
-        }
+    public static void setUpDataSource() throws Exception {
+        setupDataSource = true;
+        server.start();
+        ds = setupPoolingDataSource();
+        emf = Persistence
+                .createEntityManagerFactory("org.jbpm.persistence.jpa");
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterClass
+    public static void tearDownClass() throws Exception {
         if (setupDataSource) {
             taskService = null;
             if (emf != null) {
@@ -195,23 +191,39 @@ public abstract class JbpmJUnitTestCase extends Assert {
         }
     }
 
-    protected KieBase createKnowledgeBase(String... process) {
+    @Before
+    public void setUpTest() throws Exception {
+        System.out.println(" >>> " + testName.getMethodName() + " <<< ");
+        if (testLogger == null) {
+            testLogger = LoggerFactory.getLogger(getClass());
+        }
+    }
+
+    @After
+    public void tearDownTest() throws Exception {
+        System.out.println("");
+    }
+
+    protected KieBase createKnowledgeBase(String... process) throws Exception {
 
         KieServices ks = KieServices.Factory.get();
         KieRepository kr = ks.getRepository();
-        KieFileSystem kfs = ks.newKieFileSystem();
-
-        for (String p : process) {
-            kfs.write(ResourceFactory.newClassPathResource(p));
-        }
-
-        KieBuilder kb = ks.newKieBuilder(kfs);
-
-        kb.buildAll(); // kieModule is automatically deployed to KieRepository
-                       // if successfully built.
-        if (kb.getResults().hasMessages(Level.ERROR)) {
-            throw new RuntimeException("Build Errors:\n"
-                    + kb.getResults().toString());
+        if (process.length > 0) {
+            KieFileSystem kfs = ks.newKieFileSystem();
+    
+            for (String p : process) {
+                kfs.write(ResourceFactory.newClassPathResource(p));
+            }
+    
+            KieBuilder kb = ks.newKieBuilder(kfs);
+    
+            kb.buildAll(); // kieModule is automatically deployed to KieRepository
+                           // if successfully built.
+            
+            if (kb.getResults().hasMessages(Level.ERROR)) {
+                throw new RuntimeException("Build Errors:\n"
+                        + kb.getResults().toString());
+            }
         }
 
         KieContainer kContainer = ks.newKieContainer(kr.getDefaultReleaseId());
@@ -313,12 +325,12 @@ public abstract class JbpmJUnitTestCase extends Assert {
         return kContainer.getKieBase();
     }
 
-    protected StatefulKnowledgeSession createKnowledgeSession(KieBase kbase) {
+    protected StatefulKnowledgeSession createKnowledgeSession(KieBase kbase) throws Exception {
         return createKnowledgeSession(kbase, null);
     }
 
     protected StatefulKnowledgeSession createKnowledgeSession(KieBase kbase,
-            Environment env) {
+            Environment env) throws Exception {
         StatefulKnowledgeSession result;
         KieSessionConfiguration conf = KnowledgeBaseFactory
                 .newKnowledgeSessionConfiguration();
@@ -354,12 +366,29 @@ public abstract class JbpmJUnitTestCase extends Assert {
         return result;
     }
 
-    protected StatefulKnowledgeSession createKnowledgeSession(String... process) {
+    protected StatefulKnowledgeSession createKnowledgeSession(String... process) throws Exception {
         KieBase kbase = createKnowledgeBase(process);
         return createKnowledgeSession(kbase);
     }
 
     protected StatefulKnowledgeSession restoreSession(
+            StatefulKnowledgeSession ksession, boolean noCache) {
+        if (sessionPersistence) {
+            Environment env = null;
+            if (noCache) {
+                env = createEnvironment(emf);
+            } else {
+                env = ksession.getEnvironment();
+            }
+            ksession = JPAKnowledgeService.loadStatefulKnowledgeSession(
+                    ksession.getId(), ksession.getKieBase(),
+                    ksession.getSessionConfiguration(), env);
+            AuditLoggerFactory.newInstance(Type.JPA, ksession, null);
+        }
+        return ksession;
+    }
+
+    protected StatefulKnowledgeSession reloadSession(
             StatefulKnowledgeSession ksession, boolean noCache)
             throws SystemException {
         if (sessionPersistence) {
@@ -403,7 +432,7 @@ public abstract class JbpmJUnitTestCase extends Assert {
         }
     }
 
-    public StatefulKnowledgeSession loadSession(int id, String... process) {
+    public StatefulKnowledgeSession loadSession(int id, String... process) throws Exception {
         KieBase kbase = createKnowledgeBase(process);
 
         final KieSessionConfiguration config = KnowledgeBaseFactory
@@ -420,28 +449,28 @@ public abstract class JbpmJUnitTestCase extends Assert {
     }
 
     public Object getVariableValue(String name, long processInstanceId,
-            StatefulKnowledgeSession ksession) {
+            KieSession ksession) {
         return ((WorkflowProcessInstance) ksession
                 .getProcessInstance(processInstanceId)).getVariable(name);
     }
 
     public void assertProcessInstanceCompleted(long processInstanceId,
-            StatefulKnowledgeSession ksession) {
+            KieSession ksession) {
         assertNull(ksession.getProcessInstance(processInstanceId));
     }
 
     public void assertProcessInstanceAborted(long processInstanceId,
-            StatefulKnowledgeSession ksession) {
+            KieSession ksession) {
         assertNull(ksession.getProcessInstance(processInstanceId));
     }
 
     public void assertProcessInstanceActive(long processInstanceId,
-            StatefulKnowledgeSession ksession) {
+            KieSession ksession) {
         assertNotNull(ksession.getProcessInstance(processInstanceId));
     }
 
-    public void assertNodeActive(long processInstanceId,
-            StatefulKnowledgeSession ksession, String... name) {
+    public void assertNodeActive(long processInstanceId, KieSession ksession,
+            String... name) {
         List<String> names = new ArrayList<String>();
         for (String n : name) {
             names.add(n);
@@ -474,6 +503,24 @@ public abstract class JbpmJUnitTestCase extends Assert {
     }
 
     public void assertNodeTriggered(long processInstanceId, String... nodeNames) {
+        List<String> names = getNotTriggeredNodes(processInstanceId, nodeNames);
+        if (!names.isEmpty()) {
+            String s = names.get(0);
+            for (int i = 1; i < names.size(); i++) {
+                s += ", " + names.get(i);
+            }
+            fail("Node(s) not executed: " + s);
+        }
+    }
+
+    public void assertNotNodeTriggered(long processInstanceId,
+            String... nodeNames) {
+        List<String> names = getNotTriggeredNodes(processInstanceId, nodeNames);
+        assertTrue(Arrays.equals(names.toArray(), nodeNames));
+    }
+
+    private List<String> getNotTriggeredNodes(long processInstanceId,
+            String... nodeNames) {
         List<String> names = new ArrayList<String>();
         for (String nodeName : nodeNames) {
             names.add(nodeName);
@@ -502,13 +549,7 @@ public abstract class JbpmJUnitTestCase extends Assert {
                 }
             }
         }
-        if (!names.isEmpty()) {
-            String s = names.get(0);
-            for (int i = 1; i < names.size(); i++) {
-                s += ", " + names.get(i);
-            }
-            fail("Node(s) not executed: " + s);
-        }
+        return names;
     }
 
     protected void clearHistory() {

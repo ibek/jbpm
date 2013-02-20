@@ -24,7 +24,6 @@ public class ProcessPersistenceHumanTaskTest extends JbpmJUnitTestCase {
 
     public ProcessPersistenceHumanTaskTest() {
         super(true);
-        setPersistence(true);
     }
 
     @Test

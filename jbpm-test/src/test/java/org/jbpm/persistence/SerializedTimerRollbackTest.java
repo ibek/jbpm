@@ -52,7 +52,7 @@ public class SerializedTimerRollbackTest extends JbpmJUnitTestCase {
     private EntityManagerFactory emf;
 
     public SerializedTimerRollbackTest() {
-        super(false, true);
+        super(true);
     }
 
     @Before

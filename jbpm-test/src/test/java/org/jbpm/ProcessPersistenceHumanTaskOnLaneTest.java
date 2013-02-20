@@ -23,7 +23,6 @@ public class ProcessPersistenceHumanTaskOnLaneTest extends JbpmJUnitTestCase {
 
     public ProcessPersistenceHumanTaskOnLaneTest() {
         super(true);
-        setPersistence(true);
     }
 
     @Test

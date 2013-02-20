@@ -16,11 +16,10 @@ public class ProcessPersistenceTest extends JbpmJUnitTestCase {
 
     public ProcessPersistenceTest() {
         super(true);
-        setPersistence(true);
     }
 
     @Test
-    public void testProcess() {
+    public void testProcess() throws Exception {
         StatefulKnowledgeSession ksession = createKnowledgeSession("hello.bpmn");
         ProcessInstance processInstance = ksession
                 .startProcess("com.sample.bpmn.hello");

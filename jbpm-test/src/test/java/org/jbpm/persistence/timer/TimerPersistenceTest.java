@@ -57,7 +57,7 @@ public class TimerPersistenceTest extends JbpmJUnitTestCase {
 
     @Test
     public void boundaryEventTimerAndCompleteHumanTaskWithoutPersistence()
-            throws InterruptedException {
+            throws Exception {
         this.setPersistence(false);
 
         // Setup session
@@ -81,7 +81,7 @@ public class TimerPersistenceTest extends JbpmJUnitTestCase {
 
     @Test
     public void boundaryEventTimerAndCompleteHumanTask()
-            throws InterruptedException {
+            throws Exception {
         /**
          * First we set up everything and start the process
          */
@@ -106,7 +106,7 @@ public class TimerPersistenceTest extends JbpmJUnitTestCase {
     @Test
     @Ignore
     public void timerEventOutsideOfKnowledgeSessionTest()
-            throws InterruptedException {
+            throws Exception {
         /**
          * First we set up everything and start the process
          */
@@ -160,7 +160,7 @@ public class TimerPersistenceTest extends JbpmJUnitTestCase {
     @Test
     @Ignore
     public void boundaryEventTimerFiresAndCompleteHumanTaskWithoutKSession()
-            throws InterruptedException {
+            throws Exception {
         /**
          * First we set up everything and start the process
          */
