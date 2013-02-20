@@ -38,6 +38,7 @@ import org.kie.builder.KieFileSystem;
 import org.kie.builder.KieRepository;
 import org.kie.builder.Message.Level;
 import org.kie.definition.process.Node;
+import org.kie.io.Resource;
 import org.kie.io.ResourceFactory;
 import org.kie.persistence.jpa.JPAKnowledgeService;
 import org.kie.runtime.Environment;
@@ -205,14 +206,23 @@ public abstract class JbpmJUnitTestCase extends Assert {
     }
 
     protected KieBase createKnowledgeBase(String... process) throws Exception {
+        Resource[] resources = new Resource[process.length];
+        for (int i=0; i<process.length; ++i) {
+            String p = process[i];
+            resources[i] = (ResourceFactory.newClassPathResource(p));
+        }
+        return createKnowledgeBaseFromResources(resources);
+    }
+
+    protected KieBase createKnowledgeBaseFromResources(Resource... process) throws Exception {
 
         KieServices ks = KieServices.Factory.get();
         KieRepository kr = ks.getRepository();
         if (process.length > 0) {
             KieFileSystem kfs = ks.newKieFileSystem();
     
-            for (String p : process) {
-                kfs.write(ResourceFactory.newClassPathResource(p));
+            for (Resource p : process) {
+                kfs.write(p);
             }
     
             KieBuilder kb = ks.newKieBuilder(kfs);
@@ -326,14 +336,20 @@ public abstract class JbpmJUnitTestCase extends Assert {
     }
 
     protected StatefulKnowledgeSession createKnowledgeSession(KieBase kbase) throws Exception {
-        return createKnowledgeSession(kbase, null);
+        return createKnowledgeSession(kbase, null, null);
     }
 
-    protected StatefulKnowledgeSession createKnowledgeSession(KieBase kbase,
+    protected StatefulKnowledgeSession createKnowledgeSession(KieBase kbase, Environment env) throws Exception {
+        return createKnowledgeSession(kbase, null, env);
+    }
+
+    protected StatefulKnowledgeSession createKnowledgeSession(KieBase kbase, KieSessionConfiguration conf,
             Environment env) throws Exception {
         StatefulKnowledgeSession result;
-        KieSessionConfiguration conf = KnowledgeBaseFactory
+        if (conf == null) {
+            conf = KnowledgeBaseFactory
                 .newKnowledgeSessionConfiguration();
+        }
         // Do NOT use the Pseudo clock yet..
         // conf.setOption( ClockTypeOption.get( ClockType.PSEUDO_CLOCK.getId() )
         // );

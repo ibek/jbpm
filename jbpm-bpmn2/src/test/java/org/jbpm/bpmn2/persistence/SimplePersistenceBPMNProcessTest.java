@@ -27,7 +27,6 @@ import org.drools.event.RuleFlowGroupDeactivatedEvent;
 import org.drools.impl.EnvironmentFactory;
 import org.drools.impl.StatefulKnowledgeSessionImpl;
 import org.jbpm.bpmn2.JbpmBpmn2TestCase;
-import org.jbpm.bpmn2.SimpleBPMNProcessTest;
 import org.jbpm.bpmn2.objects.Person;
 import org.jbpm.bpmn2.xml.BPMNDISemanticModule;
 import org.jbpm.bpmn2.xml.BPMNSemanticModule;
@@ -341,7 +340,7 @@ public class SimplePersistenceBPMNProcessTest extends JbpmBpmn2TestCase {
                 ((PackageBuilderConfiguration) conf).getSemanticModules(),
                 getClass().getClassLoader());
         List<Process> processes = processReader
-                .read(SimpleBPMNProcessTest.class
+                .read(SimplePersistenceBPMNProcessTest.class
                         .getResourceAsStream("/BPMN2-RuleTaskWithFact.bpmn2"));
         assertNotNull(processes);
         assertEquals(1, processes.size());

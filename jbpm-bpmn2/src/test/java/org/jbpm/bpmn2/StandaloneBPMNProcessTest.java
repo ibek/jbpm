@@ -824,7 +824,7 @@ public class StandaloneBPMNProcessTest extends TestCase {
 		XmlProcessReader processReader = new XmlProcessReader(
 	        ((PackageBuilderConfiguration) conf).getSemanticModules(), getClass().getClassLoader());
 		KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder(conf);
-		List<Process> processes = processReader.read(SimpleBPMNProcessTest.class.getResourceAsStream("/" + process));
+		List<Process> processes = processReader.read(StandaloneBPMNProcessTest.class.getResourceAsStream("/" + process));
         for (Process p : processes) {
             RuleFlowProcess ruleFlowProcess = (RuleFlowProcess) p;
             kbuilder.add(ResourceFactory.newReaderResource(

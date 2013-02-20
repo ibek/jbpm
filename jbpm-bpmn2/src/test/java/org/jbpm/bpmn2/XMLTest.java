@@ -1,18 +1,17 @@
-/**
- * Copyright 2010 JBoss Inc
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+/*
+Copyright 2013 JBoss Inc
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.*/
 
 package org.jbpm.bpmn2;
 
@@ -26,7 +25,6 @@ import org.custommonkey.xmlunit.Difference;
 import org.custommonkey.xmlunit.DifferenceConstants;
 import org.custommonkey.xmlunit.DifferenceListener;
 import org.custommonkey.xmlunit.ElementNameAndAttributeQualifier;
-import org.custommonkey.xmlunit.XMLTestCase;
 import org.custommonkey.xmlunit.XMLUnit;
 import org.drools.xml.SemanticModules;
 import org.jbpm.bpmn2.xml.BPMNDISemanticModule;
@@ -34,35 +32,39 @@ import org.jbpm.bpmn2.xml.BPMNSemanticModule;
 import org.jbpm.bpmn2.xml.XmlBPMNProcessDumper;
 import org.jbpm.compiler.xml.XmlProcessReader;
 import org.jbpm.ruleflow.core.RuleFlowProcess;
+import org.jbpm.test.JbpmJUnitTestCase;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.kie.definition.process.Process;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
-public class BPMN2XMLTest extends XMLTestCase {
+public class XMLTest extends JbpmJUnitTestCase {
 	
-    private Logger logger = LoggerFactory.getLogger(BPMN2XMLTest.class);
+    private Logger logger = LoggerFactory.getLogger(XMLTest.class);
    
 	private static final String[] processes = {
-		"BPMN2-SimpleXMLProcess.bpmn2",
-//		"BPMN2-MinimalProcess.xml",
+		"/other/SimpleXMLProcess.bpmn2",
+//		"/activity/MinimalProcess.xml",
 	};
+
+    @BeforeClass
+    public static void setup() throws Exception {
+        XMLUnit.setIgnoreWhitespace(true);
+        XMLUnit.setIgnoreComments(true);
+    }
 	
-	public void setUp() throws Exception {
-		super.setUp();
-		XMLUnit.setIgnoreWhitespace(true);
-		XMLUnit.setIgnoreComments(true);
-	}
-	
+    @Test
 	public void testXML() throws IOException, SAXException {
 		SemanticModules modules = new SemanticModules();
 		modules.addSemanticModule(new BPMNSemanticModule());
 		modules.addSemanticModule(new BPMNDISemanticModule());
         XmlProcessReader processReader = new XmlProcessReader(modules, getClass().getClassLoader());
-        for (String processName: processes) {
-			String original = slurp(BPMN2XMLTest.class.getResourceAsStream("/" + processName));
-			List<Process> processes = processReader.read(BPMN2XMLTest.class.getResourceAsStream("/" + processName));
+        for (String processPath: processes) {
+			String original = slurp(XMLTest.class.getResourceAsStream(processPath));
+			List<Process> processes = processReader.read(XMLTest.class.getResourceAsStream(processPath));
             assertNotNull(processes);
             assertEquals(1, processes.size());
             RuleFlowProcess p = (RuleFlowProcess) processes.get(0);

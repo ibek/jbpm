@@ -19,20 +19,20 @@ package org.jbpm.bpmn2;
 import org.jbpm.bpmn2.xml.XmlBPMNProcessDumper;
 import org.jbpm.ruleflow.core.RuleFlowProcess;
 import org.jbpm.ruleflow.core.RuleFlowProcessFactory;
-import org.kie.KnowledgeBase;
-import org.kie.builder.KnowledgeBuilder;
-import org.kie.builder.KnowledgeBuilderFactory;
+import org.jbpm.test.JbpmJUnitTestCase;
+import org.junit.Test;
+import org.kie.KieBase;
 import org.kie.io.ResourceFactory;
-import org.kie.io.ResourceType;
 import org.kie.runtime.StatefulKnowledgeSession;
 
-public class ProcessFactoryTest extends JbpmBpmn2TestCase {
+public class ProcessFactoryTest extends JbpmJUnitTestCase {
 
     public ProcessFactoryTest() {
         super(false);
     }
     
-	public void testProcessFactory() {
+    @Test
+	public void testProcessFactory() throws Exception {
 		RuleFlowProcessFactory factory = RuleFlowProcessFactory.createProcess("org.jbpm.process");
 		factory
 			// header
@@ -46,9 +46,7 @@ public class ProcessFactoryTest extends JbpmBpmn2TestCase {
 			.connection(1, 2)
 			.connection(2, 3);
 		RuleFlowProcess process = factory.validate().getProcess();
-		KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
-		kbuilder.add(ResourceFactory.newByteArrayResource(XmlBPMNProcessDumper.INSTANCE.dump(process).getBytes()), ResourceType.BPMN2);
-		KnowledgeBase kbase = kbuilder.newKnowledgeBase();
+		KieBase kbase = createKnowledgeBaseFromResources(ResourceFactory.newByteArrayResource(XmlBPMNProcessDumper.INSTANCE.dump(process).getBytes()));
 		StatefulKnowledgeSession ksession = createKnowledgeSession(kbase);
 		ksession.startProcess("org.jbpm.process");
 	}

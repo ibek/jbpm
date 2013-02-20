@@ -8,7 +8,7 @@
              xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd"
              xmlns:tns="http://www.example.org/EvaluationExample">
 
-  <process id="Evaluation" name="Evaluation Process">
+  <process id="EvaluationProcess" name="Evaluation Process">
   
     <!-- nodes -->  
     <startEvent id="_1" name="StartProcess"/>
@@ -25,7 +25,7 @@
     
   </process>
   
-  <process id="Simple" name="Simple Process">
+  <process id="SimpleProcess" name="Simple Process">
     
     <!-- nodes -->  
     <startEvent id="_1" name="StartProcess"/>

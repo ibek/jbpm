@@ -2,7 +2,6 @@ package org.jbpm.bpmn2.persistence;
 
 import org.drools.compiler.PackageBuilderConfiguration;
 import org.jbpm.bpmn2.JbpmBpmn2TestCase.TestWorkItemHandler;
-import org.jbpm.bpmn2.SimpleBPMNProcessTest;
 import org.jbpm.bpmn2.xml.BPMNDISemanticModule;
 import org.jbpm.bpmn2.xml.BPMNSemanticModule;
 import org.jbpm.bpmn2.xml.XmlBPMNProcessDumper;
@@ -103,7 +102,7 @@ public class Hibernate4ProcessPersistenceTest {
                 ((PackageBuilderConfiguration) conf).getSemanticModules(),
                 getClass().getClassLoader());
         List<Process> processes = processReader
-                .read(SimpleBPMNProcessTest.class
+                .read(Hibernate4ProcessPersistenceTest.class
                         .getResourceAsStream("/BPMN2-AdHocSubProcessAutoComplete.bpmn2"));
         assertNotNull(processes);
         assertEquals(1, processes.size());

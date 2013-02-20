@@ -232,6 +232,21 @@ public class ActivityTest extends JbpmJUnitTestCase {
     }
 
     @Test
+    public void testCallActivityWithHistoryLog() throws Exception {
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("x", "oldValue");
+        ProcessInstance processInstance = ksession.startProcess(
+                "CallActivity", params);
+        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        assertEquals("new value",
+                ((WorkflowProcessInstance) processInstance).getVariable("y"));
+//        enable this as soon as pull request #98 is in as it fixes subprocess instance creation          
+//        List<ProcessInstanceLog> subprocesses = JPAProcessInstanceDbLog.findSubProcessInstances(processInstance.getId());
+//        assertNotNull(subprocesses);
+//        assertEquals(1, subprocesses.size());
+    }
+
+    @Test
     public void testRuleTask() throws Exception {
         List<String> list = new ArrayList<String>();
         ksession.setGlobal("list", list);

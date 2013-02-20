@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.drools.process.instance.impl.WorkItemImpl;
+import org.jbpm.bpmn2.JbpmBpmn2TestCase.TestWorkItemHandler;
 import org.jbpm.bpmn2.objects.Person;
 import org.jbpm.test.JbpmJUnitTestCase;
 import org.junit.After;
@@ -26,6 +27,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.kie.KieBase;
+import org.kie.KnowledgeBase;
 import org.kie.event.process.DefaultProcessEventListener;
 import org.kie.event.process.ProcessStartedEvent;
 import org.kie.runtime.StatefulKnowledgeSession;
@@ -34,7 +36,6 @@ import org.kie.runtime.process.WorkItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@RunWith(CDITestRunner.class)
 public class StartTest extends JbpmJUnitTestCase {
 
     private static final String startFolder = "start/";
@@ -181,6 +182,29 @@ public class StartTest extends JbpmJUnitTestCase {
         });
         ksession.signalEvent("MySignal", "NewValue");
         assertEquals(1, list.size());
+    }
+
+    @Test
+    public void testSignalToStartProcess() throws Exception {
+        KieBase kbase = createKnowledgeBase(startFolder + "SignalStart.bpmn2",
+                "event/IntermediateThrowEventSignal.bpmn2");
+        ksession = createKnowledgeSession(kbase);
+        TestWorkItemHandler handler = new TestWorkItemHandler();
+        ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
+                handler);
+        final List<String> startedProcesses = new ArrayList<String>();
+        ksession.addEventListener(new DefaultProcessEventListener() {
+
+            @Override
+            public void beforeProcessStarted(ProcessStartedEvent event) {
+                startedProcesses.add(event.getProcessInstance().getProcessId());
+            }
+        });
+
+        ProcessInstance processInstance2 = ksession
+                .startProcess("SignalIntermediateEvent");
+        assertProcessInstanceCompleted(processInstance2.getId(), ksession);
+        assertEquals(2, startedProcesses.size());
     }
 
     @Test

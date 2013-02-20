@@ -31,7 +31,6 @@ import org.kie.runtime.StatefulKnowledgeSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@RunWith(CDITestRunner.class)
 public class FailTest extends JbpmJUnitTestCase {
 
     private StatefulKnowledgeSession ksession;

@@ -77,7 +77,8 @@ public class EventTest extends JbpmJUnitTestCase {
                 "testIntermediateCatchEventTimer",
                 // broken, but should work?!?
                 "testSignalBoundaryEvent", "testEscalationBoundaryEventOnTask",
-                "testErrorBoundaryEventOnTask", "testConditionalBoundaryEvent", };
+                "testErrorBoundaryEventOnTask", "testConditionalBoundaryEvent", 
+                "testMessageBoundaryEventOnTask"};
         boolean persistence = PERSISTENCE;
         for (String testNameBegin : testFailsWithPersistence) {
             if (testName.getMethodName().startsWith(testNameBegin)) {
@@ -128,6 +129,19 @@ public class EventTest extends JbpmJUnitTestCase {
                 .startProcess("BoundarySignalOnTask");
         ksession.signalEvent("MySignal", "value");
         assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+    }
+    
+    @Test
+    public void testSignalBoundaryEventOnTaskBetweenProcesses() {
+            TestWorkItemHandler handler = new TestWorkItemHandler();
+            ksession.getWorkItemManager().registerWorkItemHandler("Human Task", handler);
+            ProcessInstance processInstance = ksession.startProcess("BoundarySignalOnTask");
+            
+            ProcessInstance processInstance2 = ksession.startProcess("SignalIntermediateEvent");
+            assertProcessInstanceCompleted(processInstance2.getId(), ksession);
+            
+            
+            assertProcessInstanceCompleted(processInstance.getId(), ksession);
     }
 
     @Test
@@ -789,6 +803,24 @@ public class EventTest extends JbpmJUnitTestCase {
         Person person = new Person();
         person.setName("Jack");
         ksession.insert(person);
+        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+    }
+
+    @Test
+    public void testSignalBetweenProcesses() {
+        TestWorkItemHandler handler = new TestWorkItemHandler();
+        ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
+                handler);
+
+        ProcessInstance processInstance = ksession
+                .startProcess("IntermediateCatchSignalSingle");
+        ksession.getWorkItemManager().completeWorkItem(
+                handler.getWorkItem().getId(), null);
+
+        ProcessInstance processInstance2 = ksession
+                .startProcess("SignalIntermediateEvent");
+        assertProcessInstanceCompleted(processInstance2.getId(), ksession);
+
         assertProcessInstanceCompleted(processInstance.getId(), ksession);
     }
 
