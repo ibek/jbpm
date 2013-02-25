@@ -22,6 +22,9 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import org.drools.command.impl.GenericCommand;
+import org.drools.command.impl.KnowledgeCommandContext;
+import org.jbpm.bpmn2.JbpmBpmn2TestCase.TestWorkItemHandler;
 import org.jbpm.bpmn2.handler.ReceiveTaskHandler;
 import org.jbpm.bpmn2.handler.SendTaskHandler;
 import org.jbpm.bpmn2.objects.Person;
@@ -29,6 +32,7 @@ import org.jbpm.process.instance.impl.ProcessInstanceImpl;
 import org.jbpm.process.instance.impl.demo.DoNothingWorkItemHandler;
 import org.jbpm.process.instance.impl.demo.SystemOutWorkItemHandler;
 import org.jbpm.test.JbpmJUnitTestCase;
+import org.jbpm.test.RequirePersistence;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
@@ -36,7 +40,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.kie.KieBase;
+import org.kie.KnowledgeBase;
 import org.kie.cdi.KBase;
+import org.kie.command.Context;
 import org.kie.event.process.DefaultProcessEventListener;
 import org.kie.event.process.ProcessEventListener;
 import org.kie.event.process.ProcessNodeLeftEvent;
@@ -73,28 +79,18 @@ public class EventTest extends JbpmJUnitTestCase {
 
     @Before
     public void init() throws Exception {
-        String[] testFailsWithPersistence = {
-                "testIntermediateCatchEventTimer",
-                // broken, but should work?!?
-                "testSignalBoundaryEvent", "testEscalationBoundaryEventOnTask",
-                "testErrorBoundaryEventOnTask", "testConditionalBoundaryEvent", 
-                "testMessageBoundaryEventOnTask"};
-        boolean persistence = PERSISTENCE;
-        for (String testNameBegin : testFailsWithPersistence) {
-            if (testName.getMethodName().startsWith(testNameBegin)) {
-                persistence = false;
-            }
-        }
-        setPersistence(persistence);
         ksession = createKnowledgeSession(eventBase);
     }
 
     @After
     public void dispose() {
-        ksession.dispose();
+        if (ksession != null) {
+            ksession.dispose();
+        }
     }
 
     @Test
+    @RequirePersistence(value = false, comment = "this test should work with persistence")
     public void testSignalBoundaryEventOnTask() throws Exception {
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
                 new TestWorkItemHandler());
@@ -129,22 +125,27 @@ public class EventTest extends JbpmJUnitTestCase {
                 .startProcess("BoundarySignalOnTask");
         ksession.signalEvent("MySignal", "value");
         assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
-    }
-    
-    @Test
-    public void testSignalBoundaryEventOnTaskBetweenProcesses() {
-            TestWorkItemHandler handler = new TestWorkItemHandler();
-            ksession.getWorkItemManager().registerWorkItemHandler("Human Task", handler);
-            ProcessInstance processInstance = ksession.startProcess("BoundarySignalOnTask");
-            
-            ProcessInstance processInstance2 = ksession.startProcess("SignalIntermediateEvent");
-            assertProcessInstanceCompleted(processInstance2.getId(), ksession);
-            
-            
-            assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertNodeTriggered(processInstance.getId(), "StartProcess", "User Task", "Boundary event", "Signal received", "End2");
     }
 
     @Test
+    @RequirePersistence(false)
+    public void testSignalBoundaryEventOnTaskBetweenProcesses() {
+        TestWorkItemHandler handler = new TestWorkItemHandler();
+        ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
+                handler);
+        ProcessInstance processInstance = ksession
+                .startProcess("BoundarySignalOnTask");
+
+        ProcessInstance processInstance2 = ksession
+                .startProcess("SignalIntermediateEvent");
+        assertProcessInstanceCompleted(processInstance2.getId(), ksession);
+
+        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+    }
+
+    @Test
+    @RequirePersistence(false)
     public void testSignalBoundaryEventOnTaskComplete() throws Exception {
         TestWorkItemHandler handler = new TestWorkItemHandler();
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
@@ -433,6 +434,7 @@ public class EventTest extends JbpmJUnitTestCase {
     }
 
     @Test
+    @RequirePersistence(false)
     public void testEscalationBoundaryEventOnTask() throws Exception {
         TestWorkItemHandler handler = new TestWorkItemHandler();
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
@@ -489,6 +491,7 @@ public class EventTest extends JbpmJUnitTestCase {
     }
 
     @Test
+    @RequirePersistence(false)
     public void testErrorBoundaryEventOnTask() throws Exception {
         TestWorkItemHandler handler = new TestWorkItemHandler();
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
@@ -669,6 +672,7 @@ public class EventTest extends JbpmJUnitTestCase {
         // now signal process instance
         ksession.signalEvent("MyMessage", "SomeValue", processInstance.getId());
         assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertNodeTriggered(processInstance.getId(), "StartProcess", "UserTask", "EndProcess", "event");
     }
 
     @Test
@@ -686,6 +690,7 @@ public class EventTest extends JbpmJUnitTestCase {
     }
 
     @Test
+    @RequirePersistence(false)
     public void testIntermediateCatchEventTimerDuration() throws Exception {
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
                 new DoNothingWorkItemHandler());
@@ -702,6 +707,7 @@ public class EventTest extends JbpmJUnitTestCase {
     }
 
     @Test
+    @RequirePersistence(false)
     public void testIntermediateCatchEventTimerDateISO() throws Exception {
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
                 new DoNothingWorkItemHandler());
@@ -719,6 +725,7 @@ public class EventTest extends JbpmJUnitTestCase {
     }
 
     @Test
+    @RequirePersistence(false)
     public void testIntermediateCatchEventTimerDurationISO() throws Exception {
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
                 new DoNothingWorkItemHandler());
@@ -735,6 +742,7 @@ public class EventTest extends JbpmJUnitTestCase {
     }
 
     @Test
+    @RequirePersistence(false)
     public void testIntermediateCatchEventTimerCycle1() throws Exception {
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
                 new DoNothingWorkItemHandler());
@@ -751,6 +759,7 @@ public class EventTest extends JbpmJUnitTestCase {
     }
 
     @Test
+    @RequirePersistence(false)
     public void testIntermediateCatchEventTimerCycleISO() throws Exception {
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
                 new DoNothingWorkItemHandler());
@@ -778,6 +787,7 @@ public class EventTest extends JbpmJUnitTestCase {
     }
 
     @Test
+    @RequirePersistence(false)
     public void testIntermediateCatchEventTimerCycle2() throws Exception {
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
                 new DoNothingWorkItemHandler());
@@ -853,15 +863,6 @@ public class EventTest extends JbpmJUnitTestCase {
         ProcessInstance processInstance = ksession
                 .startProcess("CompensateIntermediateThrowEvent");
         assertProcessInstanceCompleted(processInstance.getId(), ksession);
-    }
-
-    @Test
-    public void testCompensateEndEventProcess() throws Exception {
-        ProcessInstance processInstance = ksession
-                .startProcess("CompensateEndEvent");
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
-        assertNodeTriggered(processInstance.getId(), "StartProcess", "Task",
-                "CompensateEvent", "CompensateEvent2", "Compensate", "EndEvent");
     }
 
     @Test
@@ -953,6 +954,7 @@ public class EventTest extends JbpmJUnitTestCase {
     }
 
     @Test
+    @RequirePersistence(false)
     public void testConditionalBoundaryEventOnTask() throws Exception {
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
                 new TestWorkItemHandler());
@@ -968,6 +970,7 @@ public class EventTest extends JbpmJUnitTestCase {
     }
 
     @Test
+    @RequirePersistence(false)
     public void testConditionalBoundaryEventOnTaskComplete() throws Exception {
         TestWorkItemHandler handler = new TestWorkItemHandler();
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
@@ -989,6 +992,7 @@ public class EventTest extends JbpmJUnitTestCase {
     }
 
     @Test
+    @RequirePersistence(false)
     public void testConditionalBoundaryEventOnTaskActiveOnStartup()
             throws Exception {
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
@@ -1006,6 +1010,7 @@ public class EventTest extends JbpmJUnitTestCase {
     }
 
     @Test
+    @RequirePersistence(false)
     public void testConditionalBoundaryEventInterrupting() throws Exception {
         ksession.getWorkItemManager().registerWorkItemHandler("MyTask",
                 new DoNothingWorkItemHandler());
@@ -1026,6 +1031,7 @@ public class EventTest extends JbpmJUnitTestCase {
     }
 
     @Test
+    @RequirePersistence(false)
     public void testMessageBoundaryEventOnTask() throws Exception {
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
                 new TestWorkItemHandler());
@@ -1039,6 +1045,7 @@ public class EventTest extends JbpmJUnitTestCase {
     }
 
     @Test
+    @RequirePersistence(false)
     public void testMessageBoundaryEventOnTaskComplete() throws Exception {
         TestWorkItemHandler handler = new TestWorkItemHandler();
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
@@ -1057,10 +1064,7 @@ public class EventTest extends JbpmJUnitTestCase {
     }
 
     @Test
-    /**
-     * FIXME knowledge runtime in process instance is null while run with persistence and the X variable cannot be set then
-     * @throws Exception
-     */
+    @RequirePersistence(value = false)
     public void testIntermediateCatchEventTimerCycleWithError()
             throws Exception {
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
@@ -1082,6 +1086,51 @@ public class EventTest extends JbpmJUnitTestCase {
                 .getVariable("x");
         assertEquals(new Integer(2), xValue);
 
+        ksession.abortProcessInstance(processInstance.getId());
+        assertProcessInstanceAborted(processInstance.getId(), ksession);
+    }
+
+    @Test
+    @RequirePersistence(true)
+    public void testIntermediateCatchEventTimerCycleWithErrorPersistence()
+            throws Exception {
+        ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
+                new DoNothingWorkItemHandler());
+        ProcessInstance processInstance = ksession
+                .startProcess("IntermediateCatchEventTimerCycleWithError");
+        assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
+        // now wait for 1 second for timer to trigger
+        Thread.sleep(1000);
+        assertProcessInstanceActive(processInstance.getId(), ksession);
+
+        final long piId = processInstance.getId();
+        ksession.execute(new GenericCommand<Void>() {
+            public Void execute(Context context) {
+                StatefulKnowledgeSession ksession = (StatefulKnowledgeSession) ((KnowledgeCommandContext) context)
+                        .getKieSession();
+                WorkflowProcessInstance processInstance = (WorkflowProcessInstance) ksession
+                        .getProcessInstance(piId);
+                processInstance.setVariable("x", 0);
+                return null;
+            }
+        });
+
+        Thread.sleep(1000);
+        assertProcessInstanceActive(processInstance.getId(), ksession);
+        Thread.sleep(1000);
+        assertProcessInstanceActive(processInstance.getId(), ksession);
+
+        Integer xValue = ksession.execute(new GenericCommand<Integer>() {
+            public Integer execute(Context context) {
+                StatefulKnowledgeSession ksession = (StatefulKnowledgeSession) ((KnowledgeCommandContext) context)
+                        .getKieSession();
+                WorkflowProcessInstance processInstance = (WorkflowProcessInstance) ksession
+                        .getProcessInstance(piId);
+                return (Integer) processInstance.getVariable("x");
+
+            }
+        });
+        assertEquals(new Integer(2), xValue);
         ksession.abortProcessInstance(processInstance.getId());
         assertProcessInstanceAborted(processInstance.getId(), ksession);
     }

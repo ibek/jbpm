@@ -22,6 +22,7 @@ import org.jbpm.ruleflow.core.RuleFlowProcessFactory;
 import org.jbpm.test.JbpmJUnitTestCase;
 import org.junit.Test;
 import org.kie.KieBase;
+import org.kie.io.Resource;
 import org.kie.io.ResourceFactory;
 import org.kie.runtime.StatefulKnowledgeSession;
 
@@ -46,7 +47,9 @@ public class ProcessFactoryTest extends JbpmJUnitTestCase {
 			.connection(1, 2)
 			.connection(2, 3);
 		RuleFlowProcess process = factory.validate().getProcess();
-		KieBase kbase = createKnowledgeBaseFromResources(ResourceFactory.newByteArrayResource(XmlBPMNProcessDumper.INSTANCE.dump(process).getBytes()));
+		Resource resource = ResourceFactory.newByteArrayResource(XmlBPMNProcessDumper.INSTANCE.dump(process).getBytes());
+		resource.setSourcePath("/tmp/dynamicProcess.bpmn2"); // source path or target path must be set to be added into kbase
+		KieBase kbase = createKnowledgeBaseFromResources(resource);
 		StatefulKnowledgeSession ksession = createKnowledgeSession(kbase);
 		ksession.startProcess("org.jbpm.process");
 	}

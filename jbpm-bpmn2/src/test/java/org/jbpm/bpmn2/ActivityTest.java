@@ -15,6 +15,7 @@ limitations under the License.*/
 
 package org.jbpm.bpmn2;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -23,8 +24,13 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 
 import org.drools.WorkingMemory;
+import org.drools.command.impl.CommandBasedStatefulKnowledgeSession;
+import org.drools.command.impl.KnowledgeCommandContext;
+import org.drools.compiler.PackageBuilderConfiguration;
 import org.drools.event.ActivationCancelledEvent;
 import org.drools.event.ActivationCreatedEvent;
 import org.drools.event.AfterActivationFiredEvent;
@@ -33,15 +39,27 @@ import org.drools.event.AgendaGroupPushedEvent;
 import org.drools.event.BeforeActivationFiredEvent;
 import org.drools.event.RuleFlowGroupActivatedEvent;
 import org.drools.event.RuleFlowGroupDeactivatedEvent;
+import org.drools.impl.EnvironmentFactory;
 import org.drools.impl.StatefulKnowledgeSessionImpl;
+import org.jbpm.bpmn2.JbpmBpmn2TestCase.TestWorkItemHandler;
 import org.jbpm.bpmn2.handler.ReceiveTaskHandler;
 import org.jbpm.bpmn2.handler.SendTaskHandler;
 import org.jbpm.bpmn2.handler.ServiceTaskHandler;
 import org.jbpm.bpmn2.objects.Person;
+import org.jbpm.bpmn2.persistence.SimplePersistenceBPMNProcessTest;
+import org.jbpm.bpmn2.xml.BPMNDISemanticModule;
+import org.jbpm.bpmn2.xml.BPMNSemanticModule;
+import org.jbpm.bpmn2.xml.XmlBPMNProcessDumper;
+import org.jbpm.compiler.xml.XmlProcessReader;
+import org.jbpm.process.audit.JPAProcessInstanceDbLog;
+import org.jbpm.process.audit.NodeInstanceLog;
+import org.jbpm.process.audit.ProcessInstanceLog;
 import org.jbpm.process.instance.impl.RuleAwareProcessEventLister;
 import org.jbpm.process.instance.impl.demo.DoNothingWorkItemHandler;
 import org.jbpm.process.instance.impl.demo.SystemOutWorkItemHandler;
+import org.jbpm.ruleflow.core.RuleFlowProcess;
 import org.jbpm.test.JbpmJUnitTestCase;
+import org.jbpm.test.RequirePersistence;
 import org.jbpm.workflow.instance.impl.WorkflowProcessInstanceImpl;
 import org.jbpm.workflow.instance.node.CompositeContextNodeInstance;
 import org.jbpm.workflow.instance.node.DynamicNodeInstance;
@@ -51,14 +69,28 @@ import org.jbpm.workflow.instance.node.ForEachNodeInstance.ForEachJoinNodeInstan
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.kie.KieBase;
+import org.kie.KnowledgeBase;
+import org.kie.KnowledgeBaseFactory;
+import org.kie.builder.KnowledgeBuilder;
+import org.kie.builder.KnowledgeBuilderConfiguration;
+import org.kie.builder.KnowledgeBuilderFactory;
 import org.kie.cdi.KBase;
+import org.kie.definition.process.Process;
 import org.kie.event.process.DefaultProcessEventListener;
 import org.kie.event.process.ProcessNodeTriggeredEvent;
 import org.kie.event.process.ProcessStartedEvent;
 import org.kie.event.process.ProcessVariableChangedEvent;
+import org.kie.event.rule.DebugAgendaEventListener;
+import org.kie.io.ResourceFactory;
+import org.kie.io.ResourceType;
+import org.kie.persistence.jpa.JPAKnowledgeService;
+import org.kie.runtime.Environment;
+import org.kie.runtime.EnvironmentName;
+import org.kie.runtime.KieSessionConfiguration;
 import org.kie.runtime.StatefulKnowledgeSession;
 import org.kie.runtime.process.NodeInstance;
 import org.kie.runtime.process.ProcessInstance;
@@ -92,27 +124,14 @@ public class ActivityTest extends JbpmJUnitTestCase {
 
     @Before
     public void init() throws Exception {
-        String [] testFailsWithPersistence = { 
-            // broken, but should work?!?
-            "testBusinessRuleTask",
-            "testNullVariableInScriptTaskProcess",
-            "testCallActivityWithBoundaryEvent",
-            "testRuleTaskWithFacts",
-            "testMultiInstanceLoopCharacteristicsProcessWithORGateway"
-        };
-        boolean persistence = PERSISTENCE;
-        for( String testNameBegin : testFailsWithPersistence ) { 
-             if( testName.getMethodName().startsWith(testNameBegin) ) { 
-                 persistence = false;
-             }
-        }
-        setPersistence(persistence);
         ksession = createKnowledgeSession(activityBase);
     }
 
     @After
     public void dispose() {
-        ksession.dispose();
+        if (ksession != null) {
+            ksession.dispose();
+        }
         if (ksession2 != null) {
             ksession2.dispose();
             ksession2 = null;
@@ -157,6 +176,30 @@ public class ActivityTest extends JbpmJUnitTestCase {
     public void testScriptTask() throws Exception {
         ProcessInstance processInstance = ksession.startProcess("ScriptTask");
         assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+    }
+    
+    @Test
+    @RequirePersistence(true)
+    public void testScriptTaskWithHistoryLog() throws Exception {
+        ProcessInstance processInstance = ksession.startProcess("ScriptTask");
+        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        
+        List<NodeInstanceLog> logs = JPAProcessInstanceDbLog.findNodeInstances(processInstance.getId());
+        assertNotNull(logs);
+        assertEquals(6, logs.size());
+        
+        for (NodeInstanceLog log : logs) {
+            assertNotNull(log.getDate());
+        }
+        
+        ProcessInstanceLog pilog = JPAProcessInstanceDbLog.findProcessInstance(processInstance.getId());
+        assertNotNull(pilog);
+        assertNotNull(pilog.getEnd());
+        
+        List<ProcessInstanceLog> pilogs = JPAProcessInstanceDbLog.findActiveProcessInstances(processInstance.getProcessId());
+        assertNotNull(pilogs);
+        assertEquals(0, pilogs.size());
+        
     }
 
     @Test
@@ -245,6 +288,42 @@ public class ActivityTest extends JbpmJUnitTestCase {
 //        assertNotNull(subprocesses);
 //        assertEquals(1, subprocesses.size());
     }
+    
+    /**
+     * FIXME JIRA DROOLS-48
+     * @throws Exception
+     */
+    @Test
+    @RequirePersistence(true)
+    @Ignore
+    public void testCallActivityWithTimer() throws Exception {
+        TestWorkItemHandler workItemHandler = new TestWorkItemHandler();
+        ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
+                workItemHandler);
+        
+        Map<String, Object> params = new HashMap<String, Object>();
+        ProcessInstance processInstance = ksession.startProcess(
+                "CallActivityWithTimer", params);
+        
+        ksession.getWorkItemManager().completeWorkItem(
+                workItemHandler.getWorkItem().getId(), null);
+        
+        Map<String, Object> res = new HashMap<String, Object>();
+        res.put("sleep", "2s");
+        ksession.getWorkItemManager().completeWorkItem(
+                workItemHandler.getWorkItem().getId(), res);
+        
+        int id = ksession.getId();
+        KieSessionConfiguration config = ksession.getSessionConfiguration();
+        Environment env = ksession.getEnvironment();
+        
+        System.out.println("dispose");
+        ksession.dispose();
+        Thread.sleep(3000);
+        ksession = reloadSession(ksession, id, activityBase, config, env, false);
+        Thread.sleep(3000);
+        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+    }
 
     @Test
     public void testRuleTask() throws Exception {
@@ -274,6 +353,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
     }
 
     @Test
+    @RequirePersistence(false)
     public void testRuleTaskWithFacts() throws Exception {
 
         final org.drools.event.AgendaEventListener agendaEventListener = new org.drools.event.AgendaEventListener() {
@@ -324,7 +404,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
             }
         };
         ((StatefulKnowledgeSessionImpl) ksession).session
-                .addEventListener(agendaEventListener); // FIXME org.drools.command.impl.CommandBasedStatefulKnowledgeSession cannot be cast to org.drools.impl.StatefulKnowledgeSessionImpl while run with persistence
+                .addEventListener(agendaEventListener);
 
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("x", "SomeString");
@@ -341,6 +421,60 @@ public class ActivityTest extends JbpmJUnitTestCase {
         } catch (Exception e) {
             // e.printStackTrace();
             System.out.println("Expected exception " + e);
+        }
+
+        params = new HashMap<String, Object>();
+        params.put("x", "SomeString");
+        processInstance = ksession.startProcess("RuleTaskWithFact", params);
+        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+    }
+    
+    @Test
+    @RequirePersistence(true)
+    public void testRuleTaskWithFactsPersistence() throws Exception {
+        
+        final org.drools.event.AgendaEventListener agendaEventListener = new org.drools.event.AgendaEventListener() {
+            public void activationCreated(ActivationCreatedEvent event, WorkingMemory workingMemory){
+                ksession.fireAllRules();
+            }
+            public void activationCancelled(ActivationCancelledEvent event, WorkingMemory workingMemory){
+            }
+            public void beforeActivationFired(BeforeActivationFiredEvent event, WorkingMemory workingMemory) {
+            }
+            public void afterActivationFired(AfterActivationFiredEvent event, WorkingMemory workingMemory) {
+            }
+            public void agendaGroupPopped(AgendaGroupPoppedEvent event, WorkingMemory workingMemory) {
+            }
+
+            public void agendaGroupPushed(AgendaGroupPushedEvent event, WorkingMemory workingMemory) {
+            }
+            public void beforeRuleFlowGroupActivated(RuleFlowGroupActivatedEvent event, WorkingMemory workingMemory) {
+            }
+            public void afterRuleFlowGroupActivated(RuleFlowGroupActivatedEvent event, WorkingMemory workingMemory) {
+                workingMemory.fireAllRules();
+            }
+            public void beforeRuleFlowGroupDeactivated(RuleFlowGroupDeactivatedEvent event, WorkingMemory workingMemory) {
+            }
+            public void afterRuleFlowGroupDeactivated(RuleFlowGroupDeactivatedEvent event, WorkingMemory workingMemory) {
+            }
+        };
+        ((StatefulKnowledgeSessionImpl)  ((KnowledgeCommandContext) ((CommandBasedStatefulKnowledgeSession) ksession)
+                .getCommandService().getContext()).getKieSession() )
+                .session.addEventListener(agendaEventListener);
+        ksession.addEventListener(new DebugAgendaEventListener());
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("x", "SomeString");
+        ProcessInstance processInstance = ksession.startProcess("RuleTaskWithFact", params);
+        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+
+        params = new HashMap<String, Object>();
+
+        try {
+            processInstance = ksession.startProcess("RuleTask", params);
+
+            fail("Should fail");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         params = new HashMap<String, Object>();
@@ -410,6 +544,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
     }
 
     @Test
+    @RequirePersistence(false)
     public void testMultiInstanceLoopCharacteristicsProcessWithORGateway()
             throws Exception {
         TestWorkItemHandler workItemHandler = new TestWorkItemHandler();
@@ -753,12 +888,16 @@ public class ActivityTest extends JbpmJUnitTestCase {
         ProcessInstance processInstance = ksession
                 .startProcess("BusinessRuleTask");
 
+        restoreSession(ksession, true);
+        ksession.addEventListener(new RuleAwareProcessEventLister());
+        
         int fired = ksession.fireAllRules();
         assertEquals(1, fired);
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        assertProcessInstanceCompleted(processInstance.getId(), ksession);
     }
 
     @Test
+    @RequirePersistence(value = false, comment = "this test should work with persistence")
     public void testBusinessRuleTaskDynamic() throws Exception {
         ksession.addEventListener(new RuleAwareProcessEventLister());
 
@@ -773,6 +912,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
     }
 
     @Test
+    @RequirePersistence(value = false, comment = "this test should work with persistence")
     public void testBusinessRuleTaskWithDataInputs() throws Exception {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("person", new Person());
@@ -785,6 +925,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
     }
 
     @Test
+    @RequirePersistence(false)
     public void testNullVariableInScriptTaskProcess() throws Exception {
         ProcessInstance process = ksession
                 .startProcess("nullVariableInScriptAfterTimer");
@@ -808,6 +949,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
     }
 
     @Test
+    @RequirePersistence(false)
     public void testCallActivityWithBoundaryEvent() throws Exception {
         TestWorkItemHandler workItemHandler = new TestWorkItemHandler();
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
@@ -860,6 +1002,38 @@ public class ActivityTest extends JbpmJUnitTestCase {
         assertEquals("john", workItem.getParameter("ActorId"));
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
         assertProcessInstanceCompleted(processInstance.getId(), ksession);
+    }
+    
+    /**
+     * FIXME JIRA DROOLS-48
+     * @throws Exception
+     */
+    @Test
+    @RequirePersistence(true)
+    @Ignore
+    public void testProcesWithHumanTaskWithTimer() throws Exception {
+        TestWorkItemHandler workItemHandler = new TestWorkItemHandler();
+        ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
+                workItemHandler);
+        
+        Map<String, Object> params = new HashMap<String, Object>();
+        ProcessInstance processInstance = ksession.startProcess(
+                "SubProcessWithTimer", params);
+        
+        ksession.getWorkItemManager().completeWorkItem(
+                workItemHandler.getWorkItem().getId(), null);
+        
+        int sessionId = ksession.getId();
+        KieSessionConfiguration config = ksession.getSessionConfiguration();
+        Environment env = ksession.getEnvironment();
+
+        ksession.dispose();        
+        Thread.sleep(3000);
+        
+        ksession = reloadSession(ksession, sessionId, activityBase, config, env, false);
+        Thread.sleep(3000);
+        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+
     }
 
 }

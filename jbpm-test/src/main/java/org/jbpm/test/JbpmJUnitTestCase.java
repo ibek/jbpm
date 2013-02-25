@@ -26,9 +26,13 @@ import org.jbpm.task.utils.OnErrorAction;
 import org.jbpm.workflow.instance.impl.WorkflowProcessInstanceImpl;
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestName;
+import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.kie.KieBase;
 import org.kie.KieServices;
 import org.kie.KnowledgeBaseFactory;
@@ -110,8 +114,40 @@ public abstract class JbpmJUnitTestCase extends Assert {
     private static EntityManagerFactory emf;
     private static PoolingDataSource ds;
 
+    private RequirePersistence testReqPersistence;
     @Rule
-    public TestName testName = new TestName();
+    public TestRule watcher = new TestWatcher() {
+        protected void starting(Description description) {
+            System.out.println(" >>> " + description.getMethodName() + " <<< ");
+
+            try {
+                testReqPersistence = description.getTestClass()
+                        .getMethod(description.getMethodName())
+                        .getAnnotation(RequirePersistence.class);
+            } catch (Exception ex) {
+                // ignore
+            }
+
+            if (testLogger == null) {
+                testLogger = LoggerFactory.getLogger(getClass());
+            }
+        };
+
+        protected void finished(Description description) {
+            System.out.println("");
+        };
+    };
+
+    @Before
+    public void checkTest() {
+        if (testReqPersistence != null
+                && testReqPersistence.value() != sessionPersistence) {
+            System.out.println("skipped - persistence required = "
+                    + testReqPersistence.value() + " but currently set = "
+                    + sessionPersistence + " " + testReqPersistence.comment());
+            Assume.assumeTrue(false);
+        }
+    }
 
     public JbpmJUnitTestCase() {
         this(PERSISTENCE);
@@ -192,44 +228,32 @@ public abstract class JbpmJUnitTestCase extends Assert {
         }
     }
 
-    @Before
-    public void setUpTest() throws Exception {
-        System.out.println(" >>> " + testName.getMethodName() + " <<< ");
-        if (testLogger == null) {
-            testLogger = LoggerFactory.getLogger(getClass());
-        }
-    }
-
-    @After
-    public void tearDownTest() throws Exception {
-        System.out.println("");
-    }
-
     protected KieBase createKnowledgeBase(String... process) throws Exception {
         Resource[] resources = new Resource[process.length];
-        for (int i=0; i<process.length; ++i) {
+        for (int i = 0; i < process.length; ++i) {
             String p = process[i];
             resources[i] = (ResourceFactory.newClassPathResource(p));
         }
         return createKnowledgeBaseFromResources(resources);
     }
 
-    protected KieBase createKnowledgeBaseFromResources(Resource... process) throws Exception {
+    protected KieBase createKnowledgeBaseFromResources(Resource... process)
+            throws Exception {
 
         KieServices ks = KieServices.Factory.get();
         KieRepository kr = ks.getRepository();
         if (process.length > 0) {
             KieFileSystem kfs = ks.newKieFileSystem();
-    
+
             for (Resource p : process) {
                 kfs.write(p);
             }
-    
+
             KieBuilder kb = ks.newKieBuilder(kfs);
-    
+
             kb.buildAll(); // kieModule is automatically deployed to KieRepository
                            // if successfully built.
-            
+
             if (kb.getResults().hasMessages(Level.ERROR)) {
                 throw new RuntimeException("Build Errors:\n"
                         + kb.getResults().toString());
@@ -335,20 +359,21 @@ public abstract class JbpmJUnitTestCase extends Assert {
         return kContainer.getKieBase();
     }
 
-    protected StatefulKnowledgeSession createKnowledgeSession(KieBase kbase) throws Exception {
+    protected StatefulKnowledgeSession createKnowledgeSession(KieBase kbase)
+            throws Exception {
         return createKnowledgeSession(kbase, null, null);
     }
 
-    protected StatefulKnowledgeSession createKnowledgeSession(KieBase kbase, Environment env) throws Exception {
+    protected StatefulKnowledgeSession createKnowledgeSession(KieBase kbase,
+            Environment env) throws Exception {
         return createKnowledgeSession(kbase, null, env);
     }
 
-    protected StatefulKnowledgeSession createKnowledgeSession(KieBase kbase, KieSessionConfiguration conf,
-            Environment env) throws Exception {
+    protected StatefulKnowledgeSession createKnowledgeSession(KieBase kbase,
+            KieSessionConfiguration conf, Environment env) throws Exception {
         StatefulKnowledgeSession result;
         if (conf == null) {
-            conf = KnowledgeBaseFactory
-                .newKnowledgeSessionConfiguration();
+            conf = KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
         }
         // Do NOT use the Pseudo clock yet..
         // conf.setOption( ClockTypeOption.get( ClockType.PSEUDO_CLOCK.getId() )
@@ -382,7 +407,8 @@ public abstract class JbpmJUnitTestCase extends Assert {
         return result;
     }
 
-    protected StatefulKnowledgeSession createKnowledgeSession(String... process) throws Exception {
+    protected StatefulKnowledgeSession createKnowledgeSession(String... process)
+            throws Exception {
         KieBase kbase = createKnowledgeBase(process);
         return createKnowledgeSession(kbase);
     }
@@ -407,9 +433,16 @@ public abstract class JbpmJUnitTestCase extends Assert {
     protected StatefulKnowledgeSession reloadSession(
             StatefulKnowledgeSession ksession, boolean noCache)
             throws SystemException {
+        return reloadSession(ksession, ksession.getId(), ksession.getKieBase(),
+                ksession.getSessionConfiguration(), ksession.getEnvironment(),
+                noCache);
+    }
+
+    protected StatefulKnowledgeSession reloadSession(
+            StatefulKnowledgeSession ksession, int sessionId, KieBase kbase,
+            KieSessionConfiguration config, Environment env, boolean noCache)
+            throws SystemException {
         if (sessionPersistence) {
-            int id = ksession.getId();
-            KieBase kbase = ksession.getKieBase();
             Transaction tx = TransactionManagerServices.getTransactionManager()
                     .getCurrentTransaction();
             if (tx != null) {
@@ -418,8 +451,7 @@ public abstract class JbpmJUnitTestCase extends Assert {
                         + txStateName[txStatus],
                         tx.getStatus() == Status.STATUS_NO_TRANSACTION);
             }
-            Environment env = null;
-            if (noCache) {
+            if (noCache || env == null) {
                 emf.close();
                 env = EnvironmentFactory.newEnvironment();
                 emf = Persistence
@@ -428,17 +460,13 @@ public abstract class JbpmJUnitTestCase extends Assert {
                 env.set(EnvironmentName.TRANSACTION_MANAGER,
                         TransactionManagerServices.getTransactionManager());
                 JPAProcessInstanceDbLog.setEnvironment(env);
-                taskService = null;
-            } else {
-                env = ksession.getEnvironment();
-                taskService = null;
             }
-            KieSessionConfiguration config = ksession.getSessionConfiguration();
+            taskService = null;
             ksession.dispose();
 
             // reload knowledge session
-            ksession = JPAKnowledgeService.loadStatefulKnowledgeSession(id,
-                    kbase, config, env);
+            ksession = JPAKnowledgeService.loadStatefulKnowledgeSession(
+                    sessionId, kbase, config, env);
             KnowledgeSessionCleanup.knowledgeSessionSetLocal.get()
                     .add(ksession);
             AuditLoggerFactory.newInstance(Type.JPA, ksession, null);
@@ -448,7 +476,8 @@ public abstract class JbpmJUnitTestCase extends Assert {
         }
     }
 
-    public StatefulKnowledgeSession loadSession(int id, String... process) throws Exception {
+    public StatefulKnowledgeSession loadSession(int id, String... process)
+            throws Exception {
         KieBase kbase = createKnowledgeBase(process);
 
         final KieSessionConfiguration config = KnowledgeBaseFactory

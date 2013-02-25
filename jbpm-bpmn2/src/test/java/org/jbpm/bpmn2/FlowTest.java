@@ -23,14 +23,17 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.jbpm.bpmn2.JbpmBpmn2TestCase.TestWorkItemHandler;
 import org.jbpm.process.instance.impl.demo.SystemOutWorkItemHandler;
 import org.jbpm.test.JbpmJUnitTestCase;
+import org.jbpm.test.RequirePersistence;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.kie.KieBase;
+import org.kie.KnowledgeBase;
 import org.kie.cdi.KBase;
 import org.kie.runtime.StatefulKnowledgeSession;
 import org.kie.runtime.process.ProcessInstance;
@@ -71,7 +74,9 @@ public class FlowTest extends JbpmJUnitTestCase {
 
     @After
     public void dispose() {
-        ksession.dispose();
+        if (ksession != null) {
+            ksession.dispose();
+        }
     }
 
     @Test
@@ -194,6 +199,28 @@ public class FlowTest extends JbpmJUnitTestCase {
         assertEquals(2, activeWorkItems.size());
         restoreSession(ksession, true);
 
+        for (WorkItem wi : activeWorkItems) {
+            ksession.getWorkItemManager().completeWorkItem(wi.getId(), null);
+        }
+        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+    }
+
+    @Test
+    @RequirePersistence(true)
+    public void testInclusiveSplitAndJoinPersistence() throws Exception {
+        TestWorkItemHandler workItemHandler = new TestWorkItemHandler();
+        ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
+                workItemHandler);
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("x", 15);
+        ProcessInstance processInstance = ksession.startProcess(
+                "InclusiveSplitAndJoin", params);
+        
+        List<WorkItem> activeWorkItems = workItemHandler.getWorkItems();
+        
+        assertEquals(2, activeWorkItems.size());
+        restoreSession(ksession, true);
+        
         for (WorkItem wi : activeWorkItems) {
             ksession.getWorkItemManager().completeWorkItem(wi.getId(), null);
         }
@@ -426,18 +453,6 @@ public class FlowTest extends JbpmJUnitTestCase {
         ProcessInstance processInstance = ksession.startProcess("XORGateway",
                 params);
         assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
-    }
-
-    @Test
-    public void testConditionalFlow() throws Exception {
-        System.setProperty("jbpm.enable.multi.con", "true");
-
-        WorkflowProcessInstance wpi = (WorkflowProcessInstance) ksession
-                .startProcess("ConditionalFlowWithoutGateway");
-
-        assertProcessInstanceCompleted(wpi.getId(), ksession);
-        assertNodeTriggered(wpi.getId(), "start", "script", "end1");
-        System.clearProperty("jbpm.enable.multi.con");
     }
 
     @Test

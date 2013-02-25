@@ -31,6 +31,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.kie.KieBase;
+import org.kie.KnowledgeBase;
 import org.kie.cdi.KBase;
 import org.kie.runtime.StatefulKnowledgeSession;
 import org.kie.runtime.process.ProcessInstance;
@@ -141,6 +142,15 @@ public class EndTest extends JbpmJUnitTestCase {
                 .startProcess("OnEntryExitDesignerScriptProcess");
         assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
         assertEquals(4, myList.size());
+    }
+
+    @Test
+    public void testCompensateEndEventProcess() throws Exception {
+        ProcessInstance processInstance = ksession
+                .startProcess("CompensateEndEvent");
+        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertNodeTriggered(processInstance.getId(), "StartProcess", "Task",
+                "CompensateEvent", "CompensateEvent2", "Compensate", "EndEvent");
     }
 
 }

@@ -28,16 +28,17 @@ import org.kie.KieBase;
 import org.kie.event.process.DefaultProcessEventListener;
 import org.kie.event.process.ProcessStartedEvent;
 import org.kie.runtime.StatefulKnowledgeSession;
+import org.kie.runtime.process.WorkflowProcessInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FailTest extends JbpmJUnitTestCase {
+public class ManualTest extends JbpmJUnitTestCase {
 
     private StatefulKnowledgeSession ksession;
 
-    private Logger logger = LoggerFactory.getLogger(FailTest.class);
+    private Logger logger = LoggerFactory.getLogger(ManualTest.class);
 
-    public FailTest() {
+    public ManualTest() {
 
     }
 
@@ -60,7 +61,7 @@ public class FailTest extends JbpmJUnitTestCase {
     public void testMultipleInOutgoingSequenceFlows() throws Exception {
         System.setProperty("jbpm.enable.multi.con", "true");
 
-        KieBase kbase = createKnowledgeBase("fail/MultipleInOutgoingSequenceFlows.bpmn2");
+        KieBase kbase = createKnowledgeBase("manual/MultipleInOutgoingSequenceFlows.bpmn2");
         ksession = createKnowledgeSession(kbase);
 
         final List<Long> list = new ArrayList<Long>();
@@ -88,7 +89,7 @@ public class FailTest extends JbpmJUnitTestCase {
     public void testMultipleInOutgoingSequenceFlowsDisable() throws Exception {
 
         try {
-            KieBase kbase = createKnowledgeBase("fail/MultipleInOutgoingSequenceFlows.bpmn2");
+            KieBase kbase = createKnowledgeBase("manual/MultipleInOutgoingSequenceFlows.bpmn2");
             ksession = createKnowledgeSession(kbase);
 
             fail("Should fail as multiple outgoing and incoming connections are disabled by default");
@@ -98,6 +99,20 @@ public class FailTest extends JbpmJUnitTestCase {
                     e.getMessage());
         }
 
+    }
+
+    @Test
+    public void testConditionalFlow() throws Exception {
+        System.setProperty("jbpm.enable.multi.con", "true");
+
+        KieBase kbase = createKnowledgeBase("manual/ConditionalFlowWithoutGateway.bpmn2");
+        ksession = createKnowledgeSession(kbase);
+        WorkflowProcessInstance wpi = (WorkflowProcessInstance) ksession
+                .startProcess("ConditionalFlowWithoutGateway");
+
+        assertProcessInstanceCompleted(wpi.getId(), ksession);
+        assertNodeTriggered(wpi.getId(), "start", "script", "end1");
+        System.clearProperty("jbpm.enable.multi.con");
     }
 
 }
