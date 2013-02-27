@@ -34,7 +34,7 @@ public class ProcessPersistenceHumanTaskTest extends JbpmJUnitTestCase {
         ProcessInstance processInstance = ksession
                 .startProcess("com.sample.bpmn.hello");
 
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         assertNodeTriggered(processInstance.getId(), "Start", "Task 1");
 
         // simulating a system restart
@@ -68,7 +68,7 @@ public class ProcessPersistenceHumanTaskTest extends JbpmJUnitTestCase {
         taskService.complete(task.getId(), "mary", null);
 
         assertNodeTriggered(processInstance.getId(), "End");
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test

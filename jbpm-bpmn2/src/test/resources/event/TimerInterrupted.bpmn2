@@ -13,7 +13,7 @@
 
   <bpmn2:itemDefinition id="_timeItem" structureRef="String"/>
 
-  <bpmn2:process id="interruptedTimer" isExecutable="true">
+  <bpmn2:process id="TimerInterrupted" isExecutable="true">
 
     <bpmn2:property id="time" itemSubjectRef="_timeItem"/>
 

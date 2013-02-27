@@ -25,6 +25,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.kie.KieBase;
+import org.kie.KnowledgeBase;
 import org.kie.event.process.DefaultProcessEventListener;
 import org.kie.event.process.ProcessStartedEvent;
 import org.kie.runtime.StatefulKnowledgeSession;
@@ -110,9 +111,21 @@ public class ManualTest extends JbpmJUnitTestCase {
         WorkflowProcessInstance wpi = (WorkflowProcessInstance) ksession
                 .startProcess("ConditionalFlowWithoutGateway");
 
-        assertProcessInstanceCompleted(wpi.getId(), ksession);
+        assertProcessInstanceCompleted(wpi);
         assertNodeTriggered(wpi.getId(), "start", "script", "end1");
         System.clearProperty("jbpm.enable.multi.con");
+    }
+    
+    @Test
+    public void testNoStructureRef() {
+        
+        try {
+            KieBase kbase = createKnowledgeBase("manual/NoStructureRef.bpmn2");
+            ksession = createKnowledgeSession(kbase);
+            fail("Structure ref must be defined for a process");
+        } catch (Exception e ) {
+            System.out.println(e.getMessage());
+        }
     }
 
 }

@@ -15,7 +15,13 @@ limitations under the License.*/
 
 package org.jbpm.bpmn2;
 
+import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +53,9 @@ import org.kie.event.process.DefaultProcessEventListener;
 import org.kie.event.process.ProcessEventListener;
 import org.kie.event.process.ProcessNodeLeftEvent;
 import org.kie.event.process.ProcessNodeTriggeredEvent;
+import org.kie.persistence.jpa.JPAKnowledgeService;
+import org.kie.runtime.Environment;
+import org.kie.runtime.KieSessionConfiguration;
 import org.kie.runtime.StatefulKnowledgeSession;
 import org.kie.runtime.process.ProcessInstance;
 import org.kie.runtime.process.WorkItem;
@@ -125,7 +134,8 @@ public class EventTest extends JbpmJUnitTestCase {
                 .startProcess("BoundarySignalOnTask");
         ksession.signalEvent("MySignal", "value");
         assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
-        assertNodeTriggered(processInstance.getId(), "StartProcess", "User Task", "Boundary event", "Signal received", "End2");
+        assertNodeTriggered(processInstance.getId(), "StartProcess",
+                "User Task", "Boundary event", "Signal received", "End2");
     }
 
     @Test
@@ -139,9 +149,9 @@ public class EventTest extends JbpmJUnitTestCase {
 
         ProcessInstance processInstance2 = ksession
                 .startProcess("SignalIntermediateEvent");
-        assertProcessInstanceCompleted(processInstance2.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance2);
 
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -203,7 +213,7 @@ public class EventTest extends JbpmJUnitTestCase {
         ksession.getWorkItemManager().registerWorkItemHandler("Email2",
                 new SystemOutWorkItemHandler());
         ksession.signalEvent("Yes", "YesValue", processInstance.getId());
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertNull(ksession.getProcessInstance(processInstance.getId())); // TODO nahrad toto!!! u testu ktere neprochazi kvuli completed
         // No
         processInstance = ksession.startProcess("EventBasedSplit");
         assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
@@ -213,7 +223,7 @@ public class EventTest extends JbpmJUnitTestCase {
         ksession.getWorkItemManager().registerWorkItemHandler("Email2",
                 new SystemOutWorkItemHandler());
         ksession.signalEvent("No", "NoValue", processInstance.getId());
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertNull(ksession.getProcessInstance(processInstance.getId()));
     }
 
     @Test
@@ -290,7 +300,7 @@ public class EventTest extends JbpmJUnitTestCase {
         ksession.getWorkItemManager().registerWorkItemHandler("Email2",
                 new SystemOutWorkItemHandler());
         ksession.signalEvent("Yes", "YesValue", processInstance.getId());
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
         Thread.sleep(800);
         ksession = restoreSession(ksession, true);
         ksession.getWorkItemManager().registerWorkItemHandler("Email1",
@@ -313,7 +323,7 @@ public class EventTest extends JbpmJUnitTestCase {
         ksession.getWorkItemManager().registerWorkItemHandler("Email2",
                 new SystemOutWorkItemHandler());
         ksession.fireAllRules();
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -334,7 +344,7 @@ public class EventTest extends JbpmJUnitTestCase {
         ksession.getWorkItemManager().registerWorkItemHandler("Email2",
                 new SystemOutWorkItemHandler());
         ksession.signalEvent("Yes", "YesValue", processInstance.getId());
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
         // Condition
         processInstance = ksession.startProcess("EventBasedSplit3");
         assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
@@ -344,7 +354,7 @@ public class EventTest extends JbpmJUnitTestCase {
         ksession.getWorkItemManager().registerWorkItemHandler("Email2",
                 new SystemOutWorkItemHandler());
         ksession.insert(jack);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -364,7 +374,7 @@ public class EventTest extends JbpmJUnitTestCase {
                 new SystemOutWorkItemHandler());
         ksession.signalEvent("Message-YesMessage", "YesValue",
                 processInstance.getId());
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
         ksession = restoreSession(ksession, true);
         ksession.getWorkItemManager().registerWorkItemHandler("Email1",
                 new SystemOutWorkItemHandler());
@@ -374,7 +384,7 @@ public class EventTest extends JbpmJUnitTestCase {
         processInstance = ksession.startProcess("EventBasedSplit4");
         ksession.signalEvent("Message-NoMessage", "NoValue",
                 processInstance.getId());
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -399,7 +409,7 @@ public class EventTest extends JbpmJUnitTestCase {
         ksession.getWorkItemManager().registerWorkItemHandler("Receive Task",
                 receiveTaskHandler);
         receiveTaskHandler.messageReceived("YesMessage", "YesValue");
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
         receiveTaskHandler.messageReceived("NoMessage", "NoValue");
         ksession = restoreSession(ksession, true);
         ksession.getWorkItemManager().registerWorkItemHandler("Email1",
@@ -412,7 +422,7 @@ public class EventTest extends JbpmJUnitTestCase {
         // No
         processInstance = ksession.startProcess("EventBasedSplit5");
         receiveTaskHandler.messageReceived("NoMessage", "NoValue");
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
         receiveTaskHandler.messageReceived("YesMessage", "YesValue");
     }
 
@@ -487,7 +497,7 @@ public class EventTest extends JbpmJUnitTestCase {
                 new DoNothingWorkItemHandler());
         ProcessInstance processInstance = ksession
                 .startProcess("ErrorBoundaryEventInterrupting");
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -547,7 +557,7 @@ public class EventTest extends JbpmJUnitTestCase {
         assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
         Thread.sleep(1000);
         ksession = restoreSession(ksession, true);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -559,7 +569,7 @@ public class EventTest extends JbpmJUnitTestCase {
         assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
         Thread.sleep(1500);
         ksession = restoreSession(ksession, true);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -575,7 +585,7 @@ public class EventTest extends JbpmJUnitTestCase {
         assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
         Thread.sleep(2000);
         ksession = restoreSession(ksession, true);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -587,7 +597,7 @@ public class EventTest extends JbpmJUnitTestCase {
         assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
         Thread.sleep(1000);
         ksession = restoreSession(ksession, true);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -598,9 +608,9 @@ public class EventTest extends JbpmJUnitTestCase {
                 .startProcess("TimerBoundaryEventCycle2");
         assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
         Thread.sleep(1000);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         Thread.sleep(1000);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         ksession.abortProcessInstance(processInstance.getId());
         Thread.sleep(1000);
     }
@@ -613,11 +623,56 @@ public class EventTest extends JbpmJUnitTestCase {
                 .startProcess("TimerBoundaryEventCycleISO");
         assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
         Thread.sleep(1000);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         Thread.sleep(1000);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         ksession.abortProcessInstance(processInstance.getId());
         Thread.sleep(1000);
+    }
+
+    @Test
+    @RequirePersistence
+    public void testTimerBoundaryEventCycleISOPersistence() throws Exception {
+
+        final List<Long> list = new ArrayList<Long>();
+        ProcessEventListener listener = new DefaultProcessEventListener() {
+
+            @Override
+            public void afterNodeLeft(ProcessNodeLeftEvent event) {
+                if (event.getNodeInstance().getNodeName().equals("TimerEvent")) {
+                    list.add(event.getProcessInstance().getId());
+                }
+            }
+
+        };
+        ksession.addEventListener(listener);
+
+        int sessionId = ksession.getId();
+        KieSessionConfiguration config = ksession.getSessionConfiguration();
+        Environment env = ksession.getEnvironment();
+
+        ksession.getWorkItemManager().registerWorkItemHandler("MyTask",
+                new DoNothingWorkItemHandler());
+        ProcessInstance processInstance = ksession
+                .startProcess("TimerBoundaryEventCycleISO");
+        assertEquals(processInstance.getState(), ProcessInstance.STATE_ACTIVE);
+
+        Thread.sleep(1000);
+        assertEquals(processInstance.getState(), ProcessInstance.STATE_ACTIVE);
+        System.out.println("dispose");
+        // ksession.dispose();
+
+        // FIXME DROOLS-48
+        // ksession = reloadSession(ksession, sessionId, eventBase, config, env, true);
+        ksession.addEventListener(listener);
+        Thread.sleep(1000);
+        assertEquals(processInstance.getState(), ProcessInstance.STATE_ACTIVE);
+        Thread.sleep(2000);
+        assertEquals(processInstance.getState(), ProcessInstance.STATE_ACTIVE);
+        ksession.abortProcessInstance(processInstance.getId());
+        Thread.sleep(1000);
+        ksession.dispose();
+        assertEquals(2, list.size());
     }
 
     @Test
@@ -631,7 +686,7 @@ public class EventTest extends JbpmJUnitTestCase {
         ksession = restoreSession(ksession, true);
         logger.debug("Firing timer");
         ksession.fireAllRules();
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -645,7 +700,54 @@ public class EventTest extends JbpmJUnitTestCase {
         ksession = restoreSession(ksession, true);
         logger.debug("Firing timer");
         ksession.fireAllRules();
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
+    }
+
+    @Test
+    @RequirePersistence
+    public void testStartDisposeAndReloadTimerProcess() throws Exception {
+        final long seconds = 10;
+        final String timeUnit = "s";
+
+        // setup parameters
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("time", seconds + timeUnit);
+
+        // note process start time
+        Calendar cal = GregorianCalendar.getInstance();
+
+        // start process
+        ProcessInstance processInstance = ksession.startProcess(
+                "TimerInterrupted", params);
+        long processId = processInstance.getId();
+        // print info for next test
+        logger.info("export PROCESS_ID = " + processId);
+
+        // dispose of session
+        KieSessionConfiguration config = ksession.getSessionConfiguration();
+        int ksessionId = ksession.getId();
+        Environment env = ksession.getEnvironment();
+        // ksession.dispose(); // FIXME DROOLS-48
+
+        logger.info("export KSESSION_ID = " + ksessionId);
+
+        cal.add(Calendar.SECOND, (int) seconds);
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss.SSS");
+        logger.info("\nPlease wait at least " + seconds + timeUnit + " ["
+                + sdf.format(cal.getTime()) + "]\n");
+
+        // reload session
+        // ksession = reloadSession(ksession, ksessionId, eventBase, config, env, true); // FIXME DROOLS-48
+
+        logger.debug("! waiting 5 seconds for timer to fire");
+        Thread.sleep(seconds * 1000);
+
+        processInstance = ksession.getProcessInstance(processId);
+        if (processInstance != null) {
+            assertTrue(
+                    "Process has not terminated.",
+                    processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        }
     }
 
     @Test
@@ -658,7 +760,21 @@ public class EventTest extends JbpmJUnitTestCase {
 
         ksession = restoreSession(ksession, true);
         ksession.signalEvent("MyMessage", null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
+    }
+    
+    @Test
+    public void testSignalBoundaryEventInterruptingFromDisc() throws Exception {
+        KieBase kbase = createKnowledgeBaseFromDisc("event/SignalBoundaryEventInterrupting.bpmn2");
+        StatefulKnowledgeSession ksession = createKnowledgeSession(kbase);
+        ksession.getWorkItemManager().registerWorkItemHandler("MyTask",
+                new DoNothingWorkItemHandler());
+        ProcessInstance processInstance = ksession
+                .startProcess("SignalBoundaryEventInterrupting");
+        assertProcessInstanceActive(processInstance);
+        
+        ksession.signalEvent("MyMessage", null);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -671,8 +787,9 @@ public class EventTest extends JbpmJUnitTestCase {
         ksession = restoreSession(ksession, true);
         // now signal process instance
         ksession.signalEvent("MyMessage", "SomeValue", processInstance.getId());
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
-        assertNodeTriggered(processInstance.getId(), "StartProcess", "UserTask", "EndProcess", "event");
+        assertProcessInstanceCompleted(processInstance);
+        assertNodeTriggered(processInstance.getId(), "StartProcess",
+                "UserTask", "EndProcess", "event");
     }
 
     @Test
@@ -686,7 +803,7 @@ public class EventTest extends JbpmJUnitTestCase {
         // now signal process instance
         ksession.signalEvent("Message-HelloMessage", "SomeValue",
                 processInstance.getId());
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -703,7 +820,7 @@ public class EventTest extends JbpmJUnitTestCase {
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
                 new DoNothingWorkItemHandler());
         ksession.fireAllRules();
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -721,7 +838,7 @@ public class EventTest extends JbpmJUnitTestCase {
         // now wait for 1 second for timer to trigger
         Thread.sleep(2000);
         ksession.fireAllRules();
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -738,7 +855,7 @@ public class EventTest extends JbpmJUnitTestCase {
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
                 new DoNothingWorkItemHandler());
         ksession.fireAllRules();
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -755,7 +872,7 @@ public class EventTest extends JbpmJUnitTestCase {
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
                 new DoNothingWorkItemHandler());
         ksession.fireAllRules();
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -796,9 +913,9 @@ public class EventTest extends JbpmJUnitTestCase {
         assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
         // now wait for 1 second for timer to trigger
         Thread.sleep(1000);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         Thread.sleep(1000);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         ksession.abortProcessInstance(processInstance.getId());
         Thread.sleep(1000);
     }
@@ -813,7 +930,7 @@ public class EventTest extends JbpmJUnitTestCase {
         Person person = new Person();
         person.setName("Jack");
         ksession.insert(person);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -829,16 +946,16 @@ public class EventTest extends JbpmJUnitTestCase {
 
         ProcessInstance processInstance2 = ksession
                 .startProcess("SignalIntermediateEvent");
-        assertProcessInstanceCompleted(processInstance2.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance2);
 
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
     public void testErrorEndEventProcess() throws Exception {
         ProcessInstance processInstance = ksession
                 .startProcess("ErrorEndEvent");
-        assertProcessInstanceAborted(processInstance.getId(), ksession);
+        assertProcessInstanceAborted(processInstance);
         assertEquals("error",
                 ((org.jbpm.process.instance.ProcessInstance) processInstance)
                         .getOutcome());
@@ -848,21 +965,21 @@ public class EventTest extends JbpmJUnitTestCase {
     public void testEscalationEndEventProcess() throws Exception {
         ProcessInstance processInstance = ksession
                 .startProcess("EscalationEndEvent");
-        assertProcessInstanceAborted(processInstance.getId(), ksession);
+        assertProcessInstanceAborted(processInstance);
     }
 
     @Test
     public void testEscalationIntermediateThrowEventProcess() throws Exception {
         ProcessInstance processInstance = ksession
                 .startProcess("EscalationIntermediateThrowEvent");
-        assertProcessInstanceAborted(processInstance.getId(), ksession);
+        assertProcessInstanceAborted(processInstance);
     }
 
     @Test
     public void testCompensateIntermediateThrowEventProcess() throws Exception {
         ProcessInstance processInstance = ksession
                 .startProcess("CompensateIntermediateThrowEvent");
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -899,14 +1016,14 @@ public class EventTest extends JbpmJUnitTestCase {
     public void testLinkIntermediateEvent() throws Exception {
         ProcessInstance processInstance = ksession
                 .startProcess("IntermediateLinkEvent");
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
     public void testLinkEventCompositeProcess() throws Exception {
         ProcessInstance processInstance = ksession
                 .startProcess("LinkEventCompositeProcess");
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -1024,10 +1141,29 @@ public class EventTest extends JbpmJUnitTestCase {
         Person person = new Person();
         person.setName("john");
         ksession.insert(person);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
         assertNodeTriggered(processInstance.getId(), "StartProcess", "Hello",
                 "StartSubProcess", "Task", "BoundaryEvent", "Goodbye",
                 "EndProcess");
+    }
+    
+    @Test
+    @RequirePersistence(false)
+    public void testConditionalBoundaryEventInterruptingFromDisc() throws Exception {
+        KieBase kbase = createKnowledgeBaseFromDisc("event/ConditionalBoundaryEventInterrupting.bpmn2");
+        ksession = createKnowledgeSession(kbase);
+        ksession.getWorkItemManager().registerWorkItemHandler("MyTask",
+                new DoNothingWorkItemHandler());
+        ProcessInstance processInstance = ksession
+                .startProcess("ConditionalBoundaryEvent");
+        assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
+        
+        Person person = new Person();
+        person.setName("john");
+        ksession.insert(person);
+        assertProcessInstanceCompleted(processInstance);
+        assertNodeTriggered(processInstance.getId(), "StartProcess", "Hello", "StartSubProcess",
+                "Task", "BoundaryEvent", "Goodbye", "EndProcess");
     }
 
     @Test
@@ -1074,24 +1210,24 @@ public class EventTest extends JbpmJUnitTestCase {
         assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
         // now wait for 1 second for timer to trigger
         Thread.sleep(1000);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         ((WorkflowProcessInstance) ksession.getProcessInstance(processInstance
                 .getId())).setVariable("x", new Integer(0));
         Thread.sleep(1000);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         Thread.sleep(1000);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
 
         Integer xValue = (Integer) ((WorkflowProcessInstance) processInstance)
                 .getVariable("x");
         assertEquals(new Integer(2), xValue);
 
         ksession.abortProcessInstance(processInstance.getId());
-        assertProcessInstanceAborted(processInstance.getId(), ksession);
+        assertProcessInstanceAborted(processInstance);
     }
 
     @Test
-    @RequirePersistence(true)
+    @RequirePersistence
     public void testIntermediateCatchEventTimerCycleWithErrorPersistence()
             throws Exception {
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
@@ -1101,7 +1237,7 @@ public class EventTest extends JbpmJUnitTestCase {
         assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
         // now wait for 1 second for timer to trigger
         Thread.sleep(1000);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
 
         final long piId = processInstance.getId();
         ksession.execute(new GenericCommand<Void>() {
@@ -1116,9 +1252,9 @@ public class EventTest extends JbpmJUnitTestCase {
         });
 
         Thread.sleep(1000);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         Thread.sleep(1000);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
 
         Integer xValue = ksession.execute(new GenericCommand<Integer>() {
             public Integer execute(Context context) {
@@ -1132,7 +1268,7 @@ public class EventTest extends JbpmJUnitTestCase {
         });
         assertEquals(new Integer(2), xValue);
         ksession.abortProcessInstance(processInstance.getId());
-        assertProcessInstanceAborted(processInstance.getId(), ksession);
+        assertProcessInstanceAborted(processInstance);
     }
 
     @Test
@@ -1160,17 +1296,17 @@ public class EventTest extends JbpmJUnitTestCase {
         ksession.addEventListener(listener);
 
         ksession.signalEvent("MySignal", null, processInstance.getId());
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         ksession.signalEvent("MySignal", null);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         ksession.signalEvent("MySignal", null);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         ksession.signalEvent("MySignal", null);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         WorkItem workItem = workItemHandler.getWorkItem();
         assertNotNull(workItem);
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
         assertNodeTriggered(processInstance.getId(), "start", "User Task 1",
                 "end", "Sub Process 1", "start-sub", "Script Task 1", "end-sub");
         assertEquals(4, executednodes.size());
@@ -1204,25 +1340,25 @@ public class EventTest extends JbpmJUnitTestCase {
         WorkItem workItemTopProcess = workItemHandler.getWorkItem();
 
         ksession.signalEvent("MySignal", null, processInstance.getId());
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         WorkItem workItem = workItemHandler.getWorkItem();
         assertNotNull(workItem);
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
 
         ksession.signalEvent("MySignal", null);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         workItem = workItemHandler.getWorkItem();
         assertNotNull(workItem);
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
 
         ksession.signalEvent("MySignal", null);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         workItem = workItemHandler.getWorkItem();
         assertNotNull(workItem);
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
 
         ksession.signalEvent("MySignal", null);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         workItem = workItemHandler.getWorkItem();
         assertNotNull(workItem);
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
@@ -1230,7 +1366,7 @@ public class EventTest extends JbpmJUnitTestCase {
         assertNotNull(workItemTopProcess);
         ksession.getWorkItemManager().completeWorkItem(
                 workItemTopProcess.getId(), null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
         assertNodeTriggered(processInstance.getId(), "start", "User Task 1",
                 "end", "Sub Process 1", "start-sub", "User Task 2", "end-sub");
         assertEquals(4, executednodes.size());
@@ -1263,7 +1399,7 @@ public class EventTest extends JbpmJUnitTestCase {
 
         ksession.signalEvent("MySignal", null, processInstance.getId());
 
-        assertProcessInstanceAborted(processInstance.getId(), ksession);
+        assertProcessInstanceAborted(processInstance);
         assertNodeTriggered(processInstance.getId(), "start", "User Task 1",
                 "Sub Process 1", "start-sub", "Script Task 1", "end-sub");
         assertEquals(1, executednodes.size());
@@ -1305,7 +1441,7 @@ public class EventTest extends JbpmJUnitTestCase {
         WorkItem workItem = workItemHandler.getWorkItem();
         assertNotNull(workItem);
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
         assertNodeTriggered(processInstance.getId(), "start", "User Task 1",
                 "end", "Sub Process 1", "start-sub", "Script Task 1", "end-sub");
         assertEquals(4, executednodes.size());
@@ -1338,7 +1474,7 @@ public class EventTest extends JbpmJUnitTestCase {
         WorkItem workItem = workItemHandler.getWorkItem();
         assertNotNull(workItem);
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
         assertNodeTriggered(processInstance.getId(), "start", "User Task 1",
                 "end", "Sub Process 1", "start-sub", "Script Task 1", "end-sub");
         assertEquals(1, executednodes.size());
@@ -1371,7 +1507,6 @@ public class EventTest extends JbpmJUnitTestCase {
         WorkItem workItem = workItemHandler.getWorkItem();
         assertNotNull(workItem);
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
         assertNodeTriggered(processInstance.getId(), "start", "User Task 1",
                 "end", "Sub Process 1", "start-sub", "Script Task 1", "end-sub");
         assertEquals(1, executednodes.size());
@@ -1404,7 +1539,7 @@ public class EventTest extends JbpmJUnitTestCase {
         WorkItem workItem = workItemHandler.getWorkItem();
         assertNotNull(workItem);
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
         assertNodeTriggered(processInstance.getId(), "start", "User Task 1",
                 "end", "Sub Process 1", "start-sub", "Script Task 1", "end-sub");
         assertEquals(1, executednodes.size());
@@ -1436,7 +1571,7 @@ public class EventTest extends JbpmJUnitTestCase {
         WorkItem workItem = workItemHandler.getWorkItem();
         assertNotNull(workItem);
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
         assertNodeTriggered(processInstance.getId(), "start", "User Task 1",
                 "end", "Sub Process 1", "start-sub", "Script Task 1", "end-sub");
         assertEquals(1, executednodes.size());
@@ -1468,7 +1603,7 @@ public class EventTest extends JbpmJUnitTestCase {
         WorkItem workItem = workItemHandler.getWorkItem();
         assertNotNull(workItem);
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
         assertNodeTriggered(processInstance.getId(), "start", "User Task 1",
                 "end", "start-sub", "Script Task 1", "end-sub");
         assertEquals(4, executednodes.size());
@@ -1503,7 +1638,7 @@ public class EventTest extends JbpmJUnitTestCase {
         WorkItem workItem = workItemHandler.getWorkItem();
         assertNotNull(workItem);
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
         assertNodeTriggered(processInstance.getId(), "start", "User Task 1",
                 "end", "Sub Process 1", "start-sub", "Script Task 1", "end-sub");
         assertEquals(1, executednodes.size());

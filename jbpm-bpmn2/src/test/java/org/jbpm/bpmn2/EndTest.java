@@ -74,7 +74,7 @@ public class EndTest extends JbpmJUnitTestCase {
     public void testImplicitEndParallel() throws Exception {
         ProcessInstance processInstance = ksession
                 .startProcess("ParallelSplitEnd");
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -92,8 +92,7 @@ public class EndTest extends JbpmJUnitTestCase {
         params.put("x", "MyValue");
         ProcessInstance processInstance = ksession.startProcess(
                 "MessageEndEvent", params);
-        assertEquals(ProcessInstance.STATE_COMPLETED,
-                processInstance.getState());
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -104,7 +103,7 @@ public class EndTest extends JbpmJUnitTestCase {
         ksession.setGlobal("list", myList);
         ProcessInstance processInstance = ksession
                 .startProcess("OnEntryExitScriptProcess");
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        assertProcessInstanceCompleted(processInstance);
         assertEquals(4, myList.size());
     }
 
@@ -116,7 +115,7 @@ public class EndTest extends JbpmJUnitTestCase {
         ksession.setGlobal("list", myList);
         ProcessInstance processInstance = ksession
                 .startProcess("OnEntryExitNamespacedScriptProcess");
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        assertProcessInstanceCompleted(processInstance);
         assertEquals(4, myList.size());
     }
 
@@ -128,7 +127,7 @@ public class EndTest extends JbpmJUnitTestCase {
         ksession.setGlobal("list", myList);
         ProcessInstance processInstance = ksession
                 .startProcess("OnEntryExitMixedNamespacedScriptProcess");
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        assertProcessInstanceCompleted(processInstance);
         assertEquals(4, myList.size());
     }
 
@@ -140,7 +139,7 @@ public class EndTest extends JbpmJUnitTestCase {
         ksession.setGlobal("list", myList);
         ProcessInstance processInstance = ksession
                 .startProcess("OnEntryExitDesignerScriptProcess");
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        assertProcessInstanceCompleted(processInstance);
         assertEquals(4, myList.size());
     }
 
@@ -148,7 +147,7 @@ public class EndTest extends JbpmJUnitTestCase {
     public void testCompensateEndEventProcess() throws Exception {
         ProcessInstance processInstance = ksession
                 .startProcess("CompensateEndEvent");
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
         assertNodeTriggered(processInstance.getId(), "StartProcess", "Task",
                 "CompensateEvent", "CompensateEvent2", "Compensate", "EndEvent");
     }

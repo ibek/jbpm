@@ -15,7 +15,6 @@ limitations under the License.*/
 
 package org.jbpm.bpmn2;
 
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -24,13 +23,10 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 
 import org.drools.WorkingMemory;
 import org.drools.command.impl.CommandBasedStatefulKnowledgeSession;
 import org.drools.command.impl.KnowledgeCommandContext;
-import org.drools.compiler.PackageBuilderConfiguration;
 import org.drools.event.ActivationCancelledEvent;
 import org.drools.event.ActivationCreatedEvent;
 import org.drools.event.AfterActivationFiredEvent;
@@ -39,25 +35,17 @@ import org.drools.event.AgendaGroupPushedEvent;
 import org.drools.event.BeforeActivationFiredEvent;
 import org.drools.event.RuleFlowGroupActivatedEvent;
 import org.drools.event.RuleFlowGroupDeactivatedEvent;
-import org.drools.impl.EnvironmentFactory;
 import org.drools.impl.StatefulKnowledgeSessionImpl;
-import org.jbpm.bpmn2.JbpmBpmn2TestCase.TestWorkItemHandler;
 import org.jbpm.bpmn2.handler.ReceiveTaskHandler;
 import org.jbpm.bpmn2.handler.SendTaskHandler;
 import org.jbpm.bpmn2.handler.ServiceTaskHandler;
 import org.jbpm.bpmn2.objects.Person;
-import org.jbpm.bpmn2.persistence.SimplePersistenceBPMNProcessTest;
-import org.jbpm.bpmn2.xml.BPMNDISemanticModule;
-import org.jbpm.bpmn2.xml.BPMNSemanticModule;
-import org.jbpm.bpmn2.xml.XmlBPMNProcessDumper;
-import org.jbpm.compiler.xml.XmlProcessReader;
 import org.jbpm.process.audit.JPAProcessInstanceDbLog;
 import org.jbpm.process.audit.NodeInstanceLog;
 import org.jbpm.process.audit.ProcessInstanceLog;
 import org.jbpm.process.instance.impl.RuleAwareProcessEventLister;
 import org.jbpm.process.instance.impl.demo.DoNothingWorkItemHandler;
 import org.jbpm.process.instance.impl.demo.SystemOutWorkItemHandler;
-import org.jbpm.ruleflow.core.RuleFlowProcess;
 import org.jbpm.test.JbpmJUnitTestCase;
 import org.jbpm.test.RequirePersistence;
 import org.jbpm.workflow.instance.impl.WorkflowProcessInstanceImpl;
@@ -73,23 +61,13 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.kie.KieBase;
-import org.kie.KnowledgeBase;
-import org.kie.KnowledgeBaseFactory;
-import org.kie.builder.KnowledgeBuilder;
-import org.kie.builder.KnowledgeBuilderConfiguration;
-import org.kie.builder.KnowledgeBuilderFactory;
 import org.kie.cdi.KBase;
-import org.kie.definition.process.Process;
 import org.kie.event.process.DefaultProcessEventListener;
 import org.kie.event.process.ProcessNodeTriggeredEvent;
 import org.kie.event.process.ProcessStartedEvent;
 import org.kie.event.process.ProcessVariableChangedEvent;
 import org.kie.event.rule.DebugAgendaEventListener;
-import org.kie.io.ResourceFactory;
-import org.kie.io.ResourceType;
-import org.kie.persistence.jpa.JPAKnowledgeService;
 import org.kie.runtime.Environment;
-import org.kie.runtime.EnvironmentName;
 import org.kie.runtime.KieSessionConfiguration;
 import org.kie.runtime.StatefulKnowledgeSession;
 import org.kie.runtime.process.NodeInstance;
@@ -179,7 +157,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
     }
     
     @Test
-    @RequirePersistence(true)
+    @RequirePersistence
     public void testScriptTaskWithHistoryLog() throws Exception {
         ProcessInstance processInstance = ksession.startProcess("ScriptTask");
         assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
@@ -294,7 +272,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
      * @throws Exception
      */
     @Test
-    @RequirePersistence(true)
+    @RequirePersistence
     @Ignore
     public void testCallActivityWithTimer() throws Exception {
         TestWorkItemHandler workItemHandler = new TestWorkItemHandler();
@@ -322,7 +300,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         Thread.sleep(3000);
         ksession = reloadSession(ksession, id, activityBase, config, env, false);
         Thread.sleep(3000);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -334,7 +312,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         restoreSession(ksession, true);
         ksession.fireAllRules();
         assertTrue(list.size() == 1);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -349,7 +327,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         restoreSession(ksession, true);
         ksession.fireAllRules();
         assertTrue(list.size() == 0);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -410,7 +388,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         params.put("x", "SomeString");
         ProcessInstance processInstance = ksession.startProcess(
                 "RuleTaskWithFact", params);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
 
         params = new HashMap<String, Object>();
 
@@ -426,11 +404,11 @@ public class ActivityTest extends JbpmJUnitTestCase {
         params = new HashMap<String, Object>();
         params.put("x", "SomeString");
         processInstance = ksession.startProcess("RuleTaskWithFact", params);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
     
     @Test
-    @RequirePersistence(true)
+    @RequirePersistence
     public void testRuleTaskWithFactsPersistence() throws Exception {
         
         final org.drools.event.AgendaEventListener agendaEventListener = new org.drools.event.AgendaEventListener() {
@@ -465,7 +443,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("x", "SomeString");
         ProcessInstance processInstance = ksession.startProcess("RuleTaskWithFact", params);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
 
         params = new HashMap<String, Object>();
 
@@ -480,7 +458,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         params = new HashMap<String, Object>();
         params.put("x", "SomeString");
         processInstance = ksession.startProcess("RuleTaskWithFact", params);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -493,10 +471,10 @@ public class ActivityTest extends JbpmJUnitTestCase {
         ProcessInstance processInstance1 = ksession.startProcess("RuleTask");
         ProcessInstance processInstance2 = ksession2.startProcess("RuleTask");
         ksession.fireAllRules();
-        assertProcessInstanceCompleted(processInstance1.getId(), ksession);
-        assertProcessInstanceActive(processInstance2.getId(), ksession2);
+        assertProcessInstanceCompleted(processInstance1);
+        assertProcessInstanceActive(processInstance2);
         ksession2.fireAllRules();
-        assertProcessInstanceCompleted(processInstance2.getId(), ksession2);
+        assertProcessInstanceCompleted(processInstance2);
     }
 
     @Test
@@ -511,7 +489,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         assertNotNull(workItem);
         assertEquals("john", workItem.getParameter("ActorId"));
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -606,7 +584,60 @@ public class ActivityTest extends JbpmJUnitTestCase {
         ksession.getWorkItemManager().completeWorkItem(
                 workItems.get(3).getId(), null);
 
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
+    }
+    
+    @Test
+    @RequirePersistence
+    public void testMultiInstanceLoopCharacteristicsProcessWithORGatewayPersistence() throws Exception {
+        TestWorkItemHandler workItemHandler = new TestWorkItemHandler();
+        ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
+                workItemHandler);
+        Map<String, Object> params = new HashMap<String, Object>();
+        List<Integer> myList = new ArrayList<Integer>();
+        myList.add(12);
+        myList.add(15);
+        params.put("list", myList);
+        ProcessInstance processInstance = ksession.startProcess(
+                "MultiInstanceLoopCharacteristicsProcessWithORGateway", params);
+        
+        List<WorkItem> workItems = workItemHandler.getWorkItems();
+        assertEquals(4, workItems.size());
+        
+        Collection<NodeInstance> nodeInstances = ((WorkflowProcessInstanceImpl) processInstance).getNodeInstances();
+        assertEquals(1, nodeInstances.size());
+        NodeInstance nodeInstance = nodeInstances.iterator().next(); 
+        assertTrue(nodeInstance instanceof ForEachNodeInstance);
+        
+        Collection<NodeInstance> nodeInstancesChild = ((ForEachNodeInstance) nodeInstance).getNodeInstances();
+        assertEquals(2, nodeInstancesChild.size());
+        
+        for (NodeInstance child : nodeInstancesChild) {
+            assertTrue(child instanceof CompositeContextNodeInstance);
+            assertEquals(2, ((CompositeContextNodeInstance) child).getNodeInstances().size());
+        }
+        
+        ksession.getWorkItemManager().completeWorkItem(workItems.get(0).getId(), null);
+        ksession.getWorkItemManager().completeWorkItem(workItems.get(1).getId(), null);
+        
+        processInstance = ksession.getProcessInstance(processInstance.getId());
+        
+        nodeInstances = ((WorkflowProcessInstanceImpl) processInstance).getNodeInstances();
+        assertEquals(1, nodeInstances.size());
+        nodeInstance = nodeInstances.iterator().next(); 
+        assertTrue(nodeInstance instanceof ForEachNodeInstance);
+        
+        nodeInstancesChild = ((ForEachNodeInstance) nodeInstance).getNodeInstances();
+        assertEquals(1, nodeInstancesChild.size());
+        
+        Iterator<NodeInstance> childIterator = nodeInstancesChild.iterator();
+        
+        assertTrue(childIterator.next() instanceof CompositeContextNodeInstance);
+        
+        ksession.getWorkItemManager().completeWorkItem(workItems.get(2).getId(), null);
+        ksession.getWorkItemManager().completeWorkItem(workItems.get(3).getId(), null);
+        
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -686,7 +717,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
                 workItemHandler);
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -716,10 +747,10 @@ public class ActivityTest extends JbpmJUnitTestCase {
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
                 workItemHandler);
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         workItem = workItemHandler2.getWorkItem();
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -745,10 +776,10 @@ public class ActivityTest extends JbpmJUnitTestCase {
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
                 workItemHandler);
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        // assertProcessInstanceActive(processInstance.getId(), ksession);
+        // assertProcessInstanceActive(processInstance);
         // workItem = workItemHandler2.getWorkItem();
         // ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -774,10 +805,10 @@ public class ActivityTest extends JbpmJUnitTestCase {
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
                 workItemHandler);
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         workItem = workItemHandler2.getWorkItem();
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -789,12 +820,12 @@ public class ActivityTest extends JbpmJUnitTestCase {
                 new DoNothingWorkItemHandler());
         logger.debug("Triggering node");
         ksession.signalEvent("Task1", null, processInstance.getId());
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         ksession.signalEvent("User1", null, processInstance.getId());
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         ksession.insert(new Person());
         ksession.signalEvent("Task3", null, processInstance.getId());
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -806,7 +837,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
                 new DoNothingWorkItemHandler());
         logger.debug("Triggering node");
         ksession.signalEvent("Task1", null, processInstance.getId());
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         TestWorkItemHandler workItemHandler2 = new TestWorkItemHandler();
         ksession.getWorkItemManager().registerWorkItemHandler("OtherTask",
                 workItemHandler2);
@@ -817,10 +848,10 @@ public class ActivityTest extends JbpmJUnitTestCase {
         ksession = restoreSession(ksession, true);
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
         ksession.signalEvent("User1", null, processInstance.getId());
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         ksession.insert(new Person());
         ksession.signalEvent("Task3", null, processInstance.getId());
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -832,7 +863,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
                 new DoNothingWorkItemHandler());
         logger.debug("Triggering node");
         ksession.signalEvent("Task1", null, processInstance.getId());
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         TestWorkItemHandler workItemHandler2 = new TestWorkItemHandler();
         ksession.getWorkItemManager().registerWorkItemHandler("OtherTask",
                 workItemHandler2);
@@ -840,10 +871,10 @@ public class ActivityTest extends JbpmJUnitTestCase {
                 new HashMap<String, Object>());
         ksession = restoreSession(ksession, true);
         ksession.signalEvent("User1", null, processInstance.getId());
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         ksession.insert(new Person());
         ksession.signalEvent("Task3", null, processInstance.getId());
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -854,7 +885,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         params.put("s", "john");
         WorkflowProcessInstance processInstance = (WorkflowProcessInstance) ksession
                 .startProcess("ServiceProcess", params);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
         assertEquals("Hello john!", processInstance.getVariable("s"));
     }
 
@@ -866,7 +897,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         params.put("s", "john");
         WorkflowProcessInstance processInstance = (WorkflowProcessInstance) ksession
                 .startProcess("SendTask", params);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -879,7 +910,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         assertEquals(ProcessInstance.STATE_ACTIVE, processInstance.getState());
         ksession = restoreSession(ksession, true);
         receiveTaskHandler.messageReceived("HelloMessage", "Hello john!");
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -893,7 +924,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         
         int fired = ksession.fireAllRules();
         assertEquals(1, fired);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -985,7 +1016,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         output.put("isCheckedCheckbox", "true");
         ksession.getWorkItemManager()
                 .completeWorkItem(workItem.getId(), output);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -1001,7 +1032,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         assertNotNull(workItem);
         assertEquals("john", workItem.getParameter("ActorId"));
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
     
     /**
@@ -1009,7 +1040,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
      * @throws Exception
      */
     @Test
-    @RequirePersistence(true)
+    @RequirePersistence
     @Ignore
     public void testProcesWithHumanTaskWithTimer() throws Exception {
         TestWorkItemHandler workItemHandler = new TestWorkItemHandler();
@@ -1032,7 +1063,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         
         ksession = reloadSession(ksession, sessionId, activityBase, config, env, false);
         Thread.sleep(3000);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
 
     }
 

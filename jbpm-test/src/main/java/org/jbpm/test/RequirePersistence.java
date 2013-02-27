@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 @Retention(value = RetentionPolicy.RUNTIME)
 public @interface RequirePersistence {
 	
-    boolean value();
+    boolean value() default true;
     String comment() default "";
 
 }

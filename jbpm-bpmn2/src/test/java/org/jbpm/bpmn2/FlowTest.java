@@ -202,29 +202,7 @@ public class FlowTest extends JbpmJUnitTestCase {
         for (WorkItem wi : activeWorkItems) {
             ksession.getWorkItemManager().completeWorkItem(wi.getId(), null);
         }
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
-    }
-
-    @Test
-    @RequirePersistence(true)
-    public void testInclusiveSplitAndJoinPersistence() throws Exception {
-        TestWorkItemHandler workItemHandler = new TestWorkItemHandler();
-        ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
-                workItemHandler);
-        Map<String, Object> params = new HashMap<String, Object>();
-        params.put("x", 15);
-        ProcessInstance processInstance = ksession.startProcess(
-                "InclusiveSplitAndJoin", params);
-        
-        List<WorkItem> activeWorkItems = workItemHandler.getWorkItems();
-        
-        assertEquals(2, activeWorkItems.size());
-        restoreSession(ksession, true);
-        
-        for (WorkItem wi : activeWorkItems) {
-            ksession.getWorkItemManager().completeWorkItem(wi.getId(), null);
-        }
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -245,7 +223,7 @@ public class FlowTest extends JbpmJUnitTestCase {
         for (WorkItem wi : activeWorkItems) {
             ksession.getWorkItemManager().completeWorkItem(wi.getId(), null);
         }
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -266,7 +244,7 @@ public class FlowTest extends JbpmJUnitTestCase {
         for (WorkItem wi : activeWorkItems) {
             ksession.getWorkItemManager().completeWorkItem(wi.getId(), null);
         }
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -295,7 +273,7 @@ public class FlowTest extends JbpmJUnitTestCase {
         for (WorkItem wi : activeWorkItems) {
             ksession.getWorkItemManager().completeWorkItem(wi.getId(), null);
         }
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -316,7 +294,7 @@ public class FlowTest extends JbpmJUnitTestCase {
         for (WorkItem wi : activeWorkItems) {
             ksession.getWorkItemManager().completeWorkItem(wi.getId(), null);
         }
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -337,7 +315,7 @@ public class FlowTest extends JbpmJUnitTestCase {
         for (WorkItem wi : activeWorkItems) {
             ksession.getWorkItemManager().completeWorkItem(wi.getId(), null);
         }
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -359,11 +337,11 @@ public class FlowTest extends JbpmJUnitTestCase {
             ksession.getWorkItemManager().completeWorkItem(
                     activeWorkItems.get(i).getId(), null);
         }
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
 
         ksession.getWorkItemManager().completeWorkItem(
                 activeWorkItems.get(2).getId(), null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -382,17 +360,17 @@ public class FlowTest extends JbpmJUnitTestCase {
         ksession.getWorkItemManager().completeWorkItem(
                 activeWorkItems.get(0).getId(), null);
         Thread.sleep(2000);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
 
         activeWorkItems = workItemHandler.getWorkItems();
         assertEquals(2, activeWorkItems.size());
         ksession.getWorkItemManager().completeWorkItem(
                 activeWorkItems.get(0).getId(), null);
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
 
         ksession.getWorkItemManager().completeWorkItem(
                 activeWorkItems.get(1).getId(), null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -416,11 +394,11 @@ public class FlowTest extends JbpmJUnitTestCase {
             ksession.getWorkItemManager().completeWorkItem(
                     activeWorkItems.get(i).getId(), null);
         }
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
 
         ksession.getWorkItemManager().completeWorkItem(
                 activeWorkItems.get(3).getId(), null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -479,7 +457,7 @@ public class FlowTest extends JbpmJUnitTestCase {
         assertNotNull(workItem);
         assertEquals("mary", workItem.getParameter("ActorId"));
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
 }

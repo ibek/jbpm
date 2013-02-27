@@ -16,7 +16,7 @@ public class ProcessTest extends JbpmJUnitTestCase {
         ProcessInstance processInstance = ksession
                 .startProcess("com.sample.bpmn.hello");
         // check whether the process instance has completed successfully
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
         assertNodeTriggered(processInstance.getId(), "StartProcess", "Hello",
                 "EndProcess");
     }

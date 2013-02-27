@@ -28,7 +28,7 @@ public class ProcessHumanTaskTest extends JbpmJUnitTestCase {
         ProcessInstance processInstance = ksession
                 .startProcess("com.sample.bpmn.hello");
 
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         assertNodeTriggered(processInstance.getId(), "Start", "Task 1");
 
         // let john execute Task 1
@@ -49,7 +49,7 @@ public class ProcessHumanTaskTest extends JbpmJUnitTestCase {
         taskService.complete(task.getId(), "mary", null);
 
         assertNodeTriggered(processInstance.getId(), "End");
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -61,7 +61,7 @@ public class ProcessHumanTaskTest extends JbpmJUnitTestCase {
         ProcessInstance processInstance = ksession.startProcess(
                 "com.sample.bpmn.hello.createdby", params);
 
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
         assertNodeTriggered(processInstance.getId(), "Start", "Task 1");
 
         // let john execute Task 1
@@ -84,7 +84,7 @@ public class ProcessHumanTaskTest extends JbpmJUnitTestCase {
         taskService.complete(task.getId(), "mary", null);
 
         assertNodeTriggered(processInstance.getId(), "End");
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
 }

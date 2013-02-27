@@ -32,7 +32,7 @@ public class ProcessPersistenceHumanTaskOnLaneTest extends JbpmJUnitTestCase {
 
         ProcessInstance processInstance = ksession.startProcess("UserTask");
 
-        assertProcessInstanceActive(processInstance.getId(), ksession);
+        assertProcessInstanceActive(processInstance);
 
         // simulating a system restart
         ksession = restoreSession(ksession, true);
@@ -64,7 +64,7 @@ public class ProcessPersistenceHumanTaskOnLaneTest extends JbpmJUnitTestCase {
         taskService.start(task.getId(), taskUser);
         taskService.complete(task.getId(), taskUser, null);
 
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
 }

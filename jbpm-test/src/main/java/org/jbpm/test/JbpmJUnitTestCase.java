@@ -8,6 +8,7 @@ import org.drools.SessionConfiguration;
 import org.drools.audit.WorkingMemoryInMemoryLogger;
 import org.drools.audit.event.LogEvent;
 import org.drools.audit.event.RuleFlowNodeLogEvent;
+import org.drools.core.util.DroolsStreamUtils;
 import org.drools.impl.EnvironmentFactory;
 import org.h2.tools.DeleteDbFiles;
 import org.h2.tools.Server;
@@ -40,10 +41,14 @@ import org.kie.SystemEventListenerFactory;
 import org.kie.builder.KieBuilder;
 import org.kie.builder.KieFileSystem;
 import org.kie.builder.KieRepository;
+import org.kie.builder.KnowledgeBuilderFactory;
 import org.kie.builder.Message.Level;
+import org.kie.definition.KiePackage;
+import org.kie.definition.KnowledgePackage;
 import org.kie.definition.process.Node;
 import org.kie.io.Resource;
 import org.kie.io.ResourceFactory;
+import org.kie.io.ResourceType;
 import org.kie.persistence.jpa.JPAKnowledgeService;
 import org.kie.runtime.Environment;
 import org.kie.runtime.EnvironmentName;
@@ -70,6 +75,8 @@ import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Reader;
 import java.sql.SQLException;
@@ -264,6 +271,60 @@ public abstract class JbpmJUnitTestCase extends Assert {
         return kContainer.getKieBase();
     }
 
+    protected KieBase createKnowledgeBaseFromDisc(String process) throws Exception {
+        KieServices ks = KieServices.Factory.get();
+        KieRepository kr = ks.getRepository();
+        KieFileSystem kfs = ks.newKieFileSystem();
+            
+        Resource res = ResourceFactory.newClassPathResource(process);
+        kfs.write(res);
+
+        KieBuilder kb = ks.newKieBuilder(kfs);
+
+        kb.buildAll(); // kieModule is automatically deployed to KieRepository
+                       // if successfully built.
+
+        if (kb.getResults().hasMessages(Level.ERROR)) {
+            throw new RuntimeException("Build Errors:\n"
+                    + kb.getResults().toString());
+        }
+
+        KieContainer kContainer = ks.newKieContainer(kr.getDefaultReleaseId());
+        KieBase kbase =  kContainer.getKieBase();
+        
+        File packageFile = null;
+        for (KiePackage pkg : kbase.getKiePackages() ) {
+            packageFile = new File(System.getProperty("java.io.tmpdir") + File.separator + pkg.getName()+".pkg");
+            FileOutputStream out = new FileOutputStream(packageFile);
+            try {
+                DroolsStreamUtils.streamOut(out, pkg);
+            } finally {
+                out.close();
+            }
+            
+            // store first package only
+            break;
+        }
+        
+        kfs.delete(res.getSourcePath());
+        kfs.write(ResourceFactory.newFileResource(packageFile));
+
+        kb = ks.newKieBuilder(kfs);
+        kb.buildAll(); // kieModule is automatically deployed to KieRepository
+                       // if successfully built.
+
+        if (kb.getResults().hasMessages(Level.ERROR)) {
+            throw new RuntimeException("Build Errors:\n"
+                    + kb.getResults().toString());
+        }
+        
+        kContainer = ks.newKieContainer(kr.getDefaultReleaseId());
+        kbase =  kContainer.getKieBase();
+        
+        return kbase;
+        
+    }
+
     protected KieBase createKnowledgeBaseGuvnor(String... packages)
             throws Exception {
         return createKnowledgeBaseGuvnor(false,
@@ -403,7 +464,9 @@ public abstract class JbpmJUnitTestCase extends Assert {
             result = (StatefulKnowledgeSession) kbase.newKieSession(conf, env);
             logger = new WorkingMemoryInMemoryLogger(result);
         }
-        knowledgeSessionSetLocal.get().add(result);
+        if (knowledgeSessionSetLocal.get() != null) {
+            knowledgeSessionSetLocal.get().add(result);
+        }
         return result;
     }
 
@@ -499,19 +562,16 @@ public abstract class JbpmJUnitTestCase extends Assert {
                 .getProcessInstance(processInstanceId)).getVariable(name);
     }
 
-    public void assertProcessInstanceCompleted(long processInstanceId,
-            KieSession ksession) {
-        assertNull(ksession.getProcessInstance(processInstanceId));
+    public void assertProcessInstanceCompleted(ProcessInstance processInstance) {
+        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
     }
 
-    public void assertProcessInstanceAborted(long processInstanceId,
-            KieSession ksession) {
-        assertNull(ksession.getProcessInstance(processInstanceId));
+    public void assertProcessInstanceAborted(ProcessInstance processInstance) {
+        assertTrue(processInstance.getState() == ProcessInstance.STATE_ABORTED);
     }
 
-    public void assertProcessInstanceActive(long processInstanceId,
-            KieSession ksession) {
-        assertNotNull(ksession.getProcessInstance(processInstanceId));
+    public void assertProcessInstanceActive(ProcessInstance processInstance) {
+        assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
     }
 
     public void assertNodeActive(long processInstanceId, KieSession ksession,

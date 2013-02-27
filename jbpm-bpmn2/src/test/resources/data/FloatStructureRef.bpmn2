@@ -11,9 +11,9 @@
              xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
              xmlns:tns="http://www.jboss.org/drools">
 
-  <itemDefinition id="_testItem" structureRef="Boolean" />
+  <itemDefinition id="_testItem" structureRef="Float" />
 
-  <process processType="Private" isExecutable="true" id="StructureRef" name="StructureRef" tns:packageName="defaultPackage" >
+  <process processType="Private" isExecutable="true" id="FloatStructureRef" name="StructureRef" tns:packageName="defaultPackage" >
 
     <!-- process variables -->
     <property id="test" itemSubjectRef="_testItem"/>

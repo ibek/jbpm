@@ -203,7 +203,7 @@ public class StartTest extends JbpmJUnitTestCase {
 
         ProcessInstance processInstance2 = ksession
                 .startProcess("SignalIntermediateEvent");
-        assertProcessInstanceCompleted(processInstance2.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance2);
         assertEquals(2, startedProcesses.size());
     }
 
@@ -224,13 +224,13 @@ public class StartTest extends JbpmJUnitTestCase {
                 workItemHandler);
         ProcessInstance processInstance = ksession
                 .startProcess("MultipleStartEvents");
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
+        assertProcessInstanceActive(processInstance);
         ksession = restoreSession(ksession, true);
         WorkItem workItem = workItemHandler.getWorkItem();
         assertNotNull(workItem);
         assertEquals("john", workItem.getParameter("ActorId"));
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -286,7 +286,7 @@ public class StartTest extends JbpmJUnitTestCase {
         assertNotNull(workItem);
         assertEquals("john", workItem.getParameter("ActorId"));
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance.getId(), ksession);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test

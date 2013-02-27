@@ -25,6 +25,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.drools.process.core.datatype.impl.type.ObjectDataType;
+import org.jbpm.bpmn2.JbpmBpmn2TestCase.TestWorkItemHandler;
 import org.jbpm.bpmn2.core.Association;
 import org.jbpm.bpmn2.core.DataStore;
 import org.jbpm.bpmn2.core.Definitions;
@@ -38,6 +39,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.kie.KieBase;
+import org.kie.KnowledgeBase;
 import org.kie.cdi.KBase;
 import org.kie.runtime.StatefulKnowledgeSession;
 import org.kie.runtime.process.ProcessInstance;
@@ -86,7 +88,7 @@ public class DataTest extends JbpmJUnitTestCase {
     @Test
     public void testImport() throws Exception {
         ProcessInstance processInstance = ksession.startProcess("Import");
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -95,7 +97,7 @@ public class DataTest extends JbpmJUnitTestCase {
         params.put("employee", "UserId-12345");
         ProcessInstance processInstance = ksession.startProcess("DataObject",
                 params);
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -143,7 +145,7 @@ public class DataTest extends JbpmJUnitTestCase {
         params.put("employee", "UserId-12345");
         ProcessInstance processInstance = ksession.startProcess(
                 "EvaluationProcess", params);
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -154,7 +156,7 @@ public class DataTest extends JbpmJUnitTestCase {
         params.put("employee", "UserId-12345");
         ProcessInstance processInstance = ksession.startProcess(
                 "EvaluationProcess2", params);
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -167,7 +169,7 @@ public class DataTest extends JbpmJUnitTestCase {
         params.put("employee", "john2");
         ProcessInstance processInstance = ksession.startProcess(
                 "EvaluationProcess3", params);
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -182,7 +184,7 @@ public class DataTest extends JbpmJUnitTestCase {
         params.put("instanceMetadata", document);
         ProcessInstance processInstance = ksession.startProcess(
                 "XPathExpression", params);
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -209,6 +211,7 @@ public class DataTest extends JbpmJUnitTestCase {
         params.put("instanceMetadata", document.getFirstChild());
         ProcessInstance processInstance = ksession.startProcess(
                 "DataInputAssociations", params);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -231,6 +234,7 @@ public class DataTest extends JbpmJUnitTestCase {
         params.put("instanceMetadata", "hello");
         ProcessInstance processInstance = ksession.startProcess(
                 "DataInputAssociationsStringObject", params);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     /**
@@ -277,6 +281,7 @@ public class DataTest extends JbpmJUnitTestCase {
         params.put("instanceMetadata", document.getFirstChild());
         ProcessInstance processInstance = ksession.startProcess(
                 "DataInputAssociationsLazyCreating", params);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -297,6 +302,7 @@ public class DataTest extends JbpmJUnitTestCase {
                 });
         ProcessInstance processInstance = ksession.startProcess(
                 "DataInputAssociationsString", null);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -318,6 +324,7 @@ public class DataTest extends JbpmJUnitTestCase {
                 });
         ProcessInstance processInstance = ksession.startProcess(
                 "DataInputAssociationsStringNoQuotes", null);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -342,6 +349,7 @@ public class DataTest extends JbpmJUnitTestCase {
                 });
         ProcessInstance processInstance = ksession.startProcess(
                 "DataInputAssociationsXMLLiteral", null);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     /**
@@ -382,6 +390,7 @@ public class DataTest extends JbpmJUnitTestCase {
         params.put("instanceMetadata", document.getFirstChild());
         ProcessInstance processInstance = ksession.startProcess(
                 "DataInputAssociationsTwoAssigns", params);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -428,6 +437,7 @@ public class DataTest extends JbpmJUnitTestCase {
         Map<String, Object> params = new HashMap<String, Object>();
         ProcessInstance processInstance = ksession.startProcess(
                 "DataOutputAssociationsHumanTask", params);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -461,6 +471,7 @@ public class DataTest extends JbpmJUnitTestCase {
                 });
         ProcessInstance processInstance = ksession.startProcess(
                 "DataOutputAssociations", null);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -494,6 +505,90 @@ public class DataTest extends JbpmJUnitTestCase {
                 });
         ProcessInstance processInstance = ksession.startProcess(
                 "DataOutputAssociationsXMLNode", null);
+        assertProcessInstanceCompleted(processInstance);
+    }
+
+    @Test
+    public void testStringStructureRef() {
+        TestWorkItemHandler workItemHandler = new TestWorkItemHandler();
+        ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
+                workItemHandler);
+        ProcessInstance processInstance = ksession.startProcess("StringStructureRef");
+        assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
+
+        Map<String, Object> res = new HashMap<String, Object>();
+        res.put("testHT", "test value");
+        ksession.getWorkItemManager().completeWorkItem(
+                workItemHandler.getWorkItem().getId(), res);
+        
+        assertProcessInstanceCompleted(processInstance);
+    }
+
+    @Test
+    public void testBooleanStructureRef() {
+        TestWorkItemHandler workItemHandler = new TestWorkItemHandler();
+        ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
+                workItemHandler);
+        ProcessInstance processInstance = ksession.startProcess("BooleanStructureRef");
+        assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
+
+        Map<String, Object> res = new HashMap<String, Object>();
+        res.put("testHT", "true");
+        ksession.getWorkItemManager().completeWorkItem(
+                workItemHandler.getWorkItem().getId(), res);
+        
+        assertProcessInstanceCompleted(processInstance);
+    }
+
+    @Test
+    public void testIntegerStructureRef() {
+        TestWorkItemHandler workItemHandler = new TestWorkItemHandler();
+        ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
+                workItemHandler);
+        ProcessInstance processInstance = ksession.startProcess("IntegerStructureRef");
+        assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
+
+        Map<String, Object> res = new HashMap<String, Object>();
+        res.put("testHT", "25");
+        ksession.getWorkItemManager().completeWorkItem(
+                workItemHandler.getWorkItem().getId(), res);
+        
+        assertProcessInstanceCompleted(processInstance);
+    }
+
+    @Test
+    public void testFloatStructureRef() {
+        TestWorkItemHandler workItemHandler = new TestWorkItemHandler();
+        ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
+                workItemHandler);
+        ProcessInstance processInstance = ksession.startProcess("FloatStructureRef");
+        assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
+
+        Map<String, Object> res = new HashMap<String, Object>();
+        res.put("testHT", "5.5");
+        ksession.getWorkItemManager().completeWorkItem(
+                workItemHandler.getWorkItem().getId(), res);
+        
+        assertProcessInstanceCompleted(processInstance);
+    }
+
+    @Test
+    public void testObjectStructureRef() {
+        
+        String personAsXml = "<org.jbpm.bpmn2.objects.Person><id>1</id><name>john</name></org.jbpm.bpmn2.objects.Person>";
+        
+        TestWorkItemHandler workItemHandler = new TestWorkItemHandler();
+        ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
+                workItemHandler);
+        ProcessInstance processInstance = ksession.startProcess("ObjectStructureRef");
+        assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
+
+        Map<String, Object> res = new HashMap<String, Object>();
+        res.put("testHT", personAsXml);
+        ksession.getWorkItemManager().completeWorkItem(
+                workItemHandler.getWorkItem().getId(), res);
+        
+        assertProcessInstanceCompleted(processInstance);
     }
 
 }
