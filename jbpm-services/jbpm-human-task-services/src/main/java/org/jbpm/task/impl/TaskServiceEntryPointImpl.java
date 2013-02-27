@@ -334,6 +334,10 @@ public class TaskServiceEntryPointImpl implements TaskServiceEntryPoint {
     public List<TaskSummary> getTasksAssignedByGroupsByExpirationDate(List<String> groupIds, String language, Date expirationDate){
         return taskQueryService.getTasksAssignedByGroupsByExpirationDate(groupIds, language, expirationDate);
     }
+    
+    public List<TaskSummary> getTasksAssignedByGroupsByExpirationDateOptional(List<String> groupIds, String language, Date expirationDate){
+        return taskQueryService.getTasksAssignedByGroupsByExpirationDateOptional(groupIds, language, expirationDate);
+    }
 
     public List<TaskSummary> getTasksAssignedAsPotentialOwnerByStatusByGroup(String userId, List<String> groupIds, List<Status> status, String language) {
         return taskQueryService.getTasksAssignedAsPotentialOwnerByStatusByGroup(userId, groupIds, status, language);
@@ -567,6 +571,11 @@ public class TaskServiceEntryPointImpl implements TaskServiceEntryPoint {
         Map<String, Object> content = (Map<String, Object>) unmarshalledObject;
         
         return content;
+    }
+
+    @Override
+    public List<TaskSummary> getTasksOwnedByExpirationDateOptional(String userId, List<Status> statuses, Date expirationDate) {
+        return taskQueryService.getTasksOwnedByExpirationDateOptional(userId, statuses, expirationDate);
     }
     
     

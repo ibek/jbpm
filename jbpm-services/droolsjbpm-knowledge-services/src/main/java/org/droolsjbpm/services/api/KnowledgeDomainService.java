@@ -17,7 +17,7 @@ package org.droolsjbpm.services.api;
 
 import java.util.Collection;
 import java.util.Map;
-import org.kie.runtime.StatefulKnowledgeSession;
+import org.kie.runtime.KieSession;
 
 /**
  *
@@ -35,11 +35,15 @@ public interface KnowledgeDomainService {
     
     void createDomain();
     
-    Map<Integer, StatefulKnowledgeSession> getSessionsByName(String ksessionName);
+    int newKieSession(String groupId, String artifactId, String version, String kbaseName, String sessionName);
+    
+    Map<Integer, KieSession> getSessionsByName(String ksessionName);
     
     String getProcessInSessionByName(String processDefId);
     
     int getSessionForProcessInstanceId(long processInstanceId);
     
-    StatefulKnowledgeSession getSessionById(int sessionId);
+    KieSession getSessionById(int sessionId);
+    
+    String getProcessAssetPath(String processId);
 }

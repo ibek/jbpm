@@ -39,7 +39,7 @@ public interface KnowledgeDataService {
 
     Collection<ProcessInstanceDesc> getProcessInstancesBySessionId(String sessionId);
 
-    Collection<ProcessDesc> getProcessesByDomainName(String sessionId);
+    Collection<ProcessDesc> getProcessesByDomainName(String sessionId);   
     
     Collection<ProcessDesc> getProcessesByFilter(String filter);
 
@@ -54,6 +54,8 @@ public interface KnowledgeDataService {
     Collection<NodeInstanceDesc> getProcessInstanceFullHistory(int sessionId, long processId);
     
     Collection<NodeInstanceDesc> getProcessInstanceActiveNodes(int sessionId, long processId);
+    
+    Collection<NodeInstanceDesc> getProcessInstanceCompletedNodes(int sessionId, long processId);
     
     Collection<VariableStateDesc> getVariablesCurrentState(long processInstanceId);
     

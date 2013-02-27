@@ -18,7 +18,7 @@ package org.jbpm.task.wih;
 import java.util.Date;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import org.droolsjbpm.services.api.SessionManager;
+import org.droolsjbpm.services.impl.CDISessionManager;
 import org.jboss.seam.transaction.Transactional;
 
 
@@ -35,6 +35,7 @@ import org.jbpm.task.annotations.External;
 import org.jbpm.task.api.TaskServiceEntryPoint;
 import org.jbpm.task.exception.PermissionDeniedException;
 import org.jbpm.task.impl.factories.TaskFactory;
+import org.kie.runtime.KieSession;
 import org.kie.runtime.StatefulKnowledgeSession;
 
 
@@ -51,19 +52,17 @@ public class CDIHTWorkItemHandler extends AbstractHTWorkItemHandler {
     private ExternalTaskEventListener listener;
     
     @Inject
-    private SessionManager sessionManager;
-    
-    
-    
+    private CDISessionManager sessionManager;
+
     
     public CDIHTWorkItemHandler() {
     }
     
-    public void addSession(StatefulKnowledgeSession ksession){
+    public void addSession(KieSession ksession){
         addSession(ksession, null);
     }
     
-    public void addSession(StatefulKnowledgeSession ksession, ClassLoader classLoader){
+    public void addSession(KieSession ksession, ClassLoader classLoader){
         
         listener.addSession(ksession, classLoader);
     }
@@ -78,7 +77,7 @@ public class CDIHTWorkItemHandler extends AbstractHTWorkItemHandler {
     public void executeWorkItem(WorkItem workItem, WorkItemManager manager) {
         
         int sessionId = sessionManager.getSessionForProcessInstanceId(workItem.getProcessInstanceId());
-        StatefulKnowledgeSession ksessionById = sessionManager.getKsessionById(sessionId);
+        KieSession ksessionById = sessionManager.getKsessionById(sessionId);
         
         Task task = createTaskBasedOnWorkItemParams(ksessionById, workItem);
         TaskFactory.initializeTask(task);

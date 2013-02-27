@@ -18,15 +18,20 @@ package org.jbpm.process.instance;
 
 import java.util.Collection;
 
+import org.kie.process.CorrelationKey;
 import org.kie.runtime.process.ProcessInstance;
 
 public interface ProcessInstanceManager {
 
     ProcessInstance getProcessInstance(long id);
     
+    ProcessInstance getProcessInstance(long id, boolean readOnly);
+
+    ProcessInstance getProcessInstance(CorrelationKey correlationKey);
+    
     Collection<ProcessInstance> getProcessInstances();
 
-    void addProcessInstance(ProcessInstance processInstance);
+    void addProcessInstance(ProcessInstance processInstance, CorrelationKey correlationKey);
     
     void internalAddProcessInstance(ProcessInstance processInstance);
 

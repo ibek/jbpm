@@ -15,16 +15,19 @@
  */
 package org.droolsjbpm.services.test.sessionmgmt;
 
-import bitronix.tm.resource.jdbc.PoolingDataSource;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
+
 import org.droolsjbpm.services.api.Domain;
 import org.droolsjbpm.services.api.KnowledgeAdminDataService;
 import org.droolsjbpm.services.api.KnowledgeDataService;
-import org.droolsjbpm.services.api.KnowledgeDomainService;
 import org.droolsjbpm.services.api.SessionManager;
 import org.droolsjbpm.services.api.bpmn2.BPMN2DataService;
 import org.droolsjbpm.services.impl.SimpleDomainImpl;
@@ -39,10 +42,7 @@ import org.jbpm.shared.services.api.FileException;
 import org.jbpm.task.api.TaskServiceEntryPoint;
 import org.jbpm.task.query.TaskSummary;
 import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 import org.junit.runner.RunWith;
 import org.kie.runtime.process.WorkflowProcessInstance;
 
@@ -98,26 +98,7 @@ public class SimpleSessionManagementTest {
                 .addAsManifestResource("META-INF/services/org.kie.commons.java.nio.file.spi.FileSystemProvider", ArchivePaths.create("org.kie.commons.java.nio.file.spi.FileSystemProvider"));
 
     }
-    
-     private static PoolingDataSource ds = new PoolingDataSource();
-    
-    @BeforeClass
-    public static void setUpClass(){
-        ds.setUniqueName("jdbc/testDS1");
 
-
-          //NON XA CONFIGS
-          ds.setClassName("org.h2.jdbcx.JdbcDataSource");
-          ds.setMaxPoolSize(3);
-          ds.setAllowLocalTransactions(true);
-          ds.getDriverProperties().put("user", "sa");
-          ds.getDriverProperties().put("password", "sasa");
-          ds.getDriverProperties().put("URL", "jdbc:h2:mem:mydb");
-
-          ds.init();
-        
-    }
-    
     @After
     public void tearDown() throws Exception {
         int removedTasks = taskService.removeAllTasks();
@@ -125,11 +106,6 @@ public class SimpleSessionManagementTest {
         System.out.println(" --> Removed Tasks = "+removedTasks + " - ");
         System.out.println(" --> Removed Logs = "+removedLogs + " - ");
        
-    }
-    
-    @AfterClass
-    public static void tearDownClass(){
-       ds.close();
     }
 
     @Inject
@@ -150,7 +126,7 @@ public class SimpleSessionManagementTest {
         Domain myDomain = new SimpleDomainImpl("myDomain");
         
         sessionManager.setDomain(myDomain);
-        int firstSessionId = sessionManager.buildSession("supportKsession","examples/support/", false);
+        int firstSessionId = sessionManager.buildSession("supportKsession","processes/support/", false);
         
         
         sessionManager.registerHandlersForSession("supportKsession",firstSessionId);
@@ -167,13 +143,13 @@ public class SimpleSessionManagementTest {
         
         assertEquals(1, supportSessionsIds.size());
         
-        int secondSessionId = sessionManager.buildSession("supportKsession","examples/support/", false);
+        int secondSessionId = sessionManager.buildSession("supportKsession","processes/support/", false);
         
         sessionManager.registerHandlersForSession("supportKsession", secondSessionId);
         
         supportSessionsIds = sessionManager.getSessionIdsByName("supportKsession");
         
-        assertEquals(2, supportSessionsIds.size());
+        assertEquals(1, supportSessionsIds.size());
         
         
         List<TaskSummary> salaboysTasks = taskService.getTasksAssignedAsPotentialOwner("salaboy", "en-UK");
@@ -190,7 +166,7 @@ public class SimpleSessionManagementTest {
         assertEquals(1, sessionsNames.size());
         Collection<ProcessDesc> processes = dataService.getProcesses();
         
-        assertEquals(2, processes.size());
+        assertEquals(1, processes.size());
         
         params = new HashMap<String, Object>();
         params.put("customer", "Salaboy2");

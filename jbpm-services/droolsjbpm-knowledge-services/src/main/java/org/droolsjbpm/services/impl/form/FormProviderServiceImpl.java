@@ -76,25 +76,28 @@ public class FormProviderServiceImpl implements FormProviderService {
 
     @Override
     public String getFormDisplayProcess(String processId) {
-
-        
+        String processAssetPath = domainService.getProcessAssetPath(processId);
         Iterable<Path> availableForms = null;
         try {
-            availableForms = fileService.loadFilesByType("forms/", "ftl");
+            if(fileService.exists(processAssetPath.substring(1, processAssetPath.lastIndexOf('/'))+"/forms/")){
+                availableForms = fileService.loadFilesByType(processAssetPath.substring(1, processAssetPath.lastIndexOf('/'))+"/forms/", "ftl");
+            }
         } catch (FileException ex) {
             Logger.getLogger(FormProviderServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
         Path selectedForm = null;
-        for (Path p : availableForms) {
-            if (p.getFileName().toString().contains(processId)) {
-                selectedForm = p;
+        if(availableForms != null){
+            for (Path p : availableForms) {
+                if (p.getFileName().toString().contains(processId)) {
+                    selectedForm = p;
+                }
             }
         }
         InputStream template = null;
         try {
             if (selectedForm == null) {
 
-                template = new ByteArrayInputStream(fileService.loadFile("forms/DefaultProcess.ftl"));
+                template = new ByteArrayInputStream(fileService.loadFile("globals/forms/DefaultProcess.ftl"));
 
             } else {
 
@@ -121,8 +124,12 @@ public class FormProviderServiceImpl implements FormProviderService {
     @Override
     public String getFormDisplayTask(long taskId) {
         Task task = queryService.getTaskInstanceById(taskId);
-
-
+        Map<String, Object> renderContext = new HashMap<String, Object>();
+        String processAssetPath = "";
+        if(task.getTaskData().getProcessId() != null && !task.getTaskData().getProcessId().equals("") ){
+            processAssetPath = domainService.getProcessAssetPath(task.getTaskData().getProcessId());
+        }
+        
         Object input = null;
         long inputContentId = task.getTaskData().getDocumentContentId();
         if (inputContentId != -1) {
@@ -153,21 +160,28 @@ public class FormProviderServiceImpl implements FormProviderService {
         }
         Iterable<Path> availableForms = null;
         try {
-            availableForms = fileService.loadFilesByType("forms/", "ftl");
+            if(processAssetPath != null && !processAssetPath.equals("")){
+                if(fileService.exists(processAssetPath.substring(1, processAssetPath.lastIndexOf('/'))+"/forms/")){
+                    availableForms = fileService.loadFilesByType(processAssetPath.substring(1, processAssetPath.lastIndexOf('/'))+"/forms/", "ftl");
+                }
+            }
         } catch (FileException ex) {
             Logger.getLogger(FormProviderServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
         Path selectedForm = null;
-        for (Path p : availableForms) {
-            if (p.getFileName().toString().contains(task.getNames().get(0).getText())) {
-                selectedForm = p;
+        if(availableForms != null){
+            for (Path p : availableForms) {
+                if (p.getFileName().toString().contains(task.getNames().get(0).getText())) {
+                    selectedForm = p;
+                }
             }
         }
         InputStream template = null;
         try {
             if (selectedForm == null) {
-
-                template = new ByteArrayInputStream(fileService.loadFile("forms/DefaultTask.ftl"));
+                // since we use default task that lists all inputs there needs to be complete map available
+                renderContext.put("inputs", input);
+                template = new ByteArrayInputStream(fileService.loadFile("globals/forms/DefaultTask.ftl"));
 
             } else {
 
@@ -201,11 +215,17 @@ public class FormProviderServiceImpl implements FormProviderService {
         }
 
 
-        // merge template with process variables
-        Map<String, Object> renderContext = new HashMap<String, Object>();
-        renderContext.put("task", task);
-        renderContext.put("inputs", input);
+        // merge template with process variables        
+        renderContext.put("task", task);        
         renderContext.put("outputs", finalOutput);
+        // add all inputs as direct entries
+        if (input instanceof Map) {
+            for (Map.Entry<String, Object> inputVar : ((Map<String, Object>)input).entrySet()) {
+                renderContext.put(inputVar.getKey(), inputVar.getValue());
+            }
+        } else {
+            renderContext.put("input", input);
+        }
 
         return render(name, template, renderContext);
 
