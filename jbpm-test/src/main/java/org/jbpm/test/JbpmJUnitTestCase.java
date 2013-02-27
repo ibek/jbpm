@@ -574,6 +574,10 @@ public abstract class JbpmJUnitTestCase extends Assert {
         assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
     }
 
+    public void assertProcessInstanceFinished(ProcessInstance processInstance, KieSession ksession) {
+        assertNull(ksession.getProcessInstance(processInstance.getId()));
+    }
+
     public void assertNodeActive(long processInstanceId, KieSession ksession,
             String... name) {
         List<String> names = new ArrayList<String>();

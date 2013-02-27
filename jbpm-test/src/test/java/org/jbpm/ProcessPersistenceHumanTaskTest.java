@@ -8,6 +8,7 @@ import javax.transaction.UserTransaction;
 import org.jbpm.task.TaskService;
 import org.jbpm.task.query.TaskSummary;
 import org.jbpm.test.JbpmJUnitTestCase;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.kie.runtime.StatefulKnowledgeSession;
 import org.kie.runtime.process.ProcessInstance;
@@ -26,6 +27,12 @@ public class ProcessPersistenceHumanTaskTest extends JbpmJUnitTestCase {
         super(true);
     }
 
+    @BeforeClass
+    public static void setup() throws Exception {
+        setUpDataSource();
+    }
+
+    // FIXME
     @Test
     public void testProcess() throws Exception {
         StatefulKnowledgeSession ksession = createKnowledgeSession("humantask.bpmn");

@@ -1,6 +1,7 @@
 package org.jbpm;
 
 import org.jbpm.test.JbpmJUnitTestCase;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.kie.runtime.StatefulKnowledgeSession;
 import org.kie.runtime.process.ProcessInstance;
@@ -9,6 +10,13 @@ import org.kie.runtime.process.ProcessInstance;
  * This is a sample file to test a process.
  */
 public class ProcessTest extends JbpmJUnitTestCase {
+
+    @BeforeClass
+    public static void setup() throws Exception {
+        if (PERSISTENCE) {
+            setUpDataSource();
+        }
+    }
 
     @Test
     public void testProcess() throws Exception {

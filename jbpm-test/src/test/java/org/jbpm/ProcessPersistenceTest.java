@@ -5,6 +5,7 @@ import javax.transaction.UserTransaction;
 
 import org.jbpm.process.instance.impl.demo.DoNothingWorkItemHandler;
 import org.jbpm.test.JbpmJUnitTestCase;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.kie.runtime.StatefulKnowledgeSession;
 import org.kie.runtime.process.ProcessInstance;
@@ -16,6 +17,11 @@ public class ProcessPersistenceTest extends JbpmJUnitTestCase {
 
     public ProcessPersistenceTest() {
         super(true);
+    }
+
+    @BeforeClass
+    public static void setup() throws Exception {
+        setUpDataSource();
     }
 
     @Test
