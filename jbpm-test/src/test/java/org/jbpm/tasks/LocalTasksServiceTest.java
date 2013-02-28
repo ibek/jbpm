@@ -27,6 +27,7 @@ import org.jbpm.test.JbpmJUnitTestCase;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.kie.KieBase;
 import org.kie.SystemEventListenerFactory;
@@ -55,6 +56,9 @@ public class LocalTasksServiceTest extends JbpmJUnitTestCase {
     public void setUp() throws Exception {
         context = setupWithPoolingDataSource("org.jbpm.runtime", false);
         emf = (EntityManagerFactory) context.get(ENTITY_MANAGER_FACTORY);
+        
+        setEntityManagerFactory(emf);
+        setPersistence(true);
 
         conf = new Properties();
         conf.setProperty("mail.smtp.host", "localhost");

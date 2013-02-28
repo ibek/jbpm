@@ -58,7 +58,6 @@ public class ProcessHumanTaskTest extends JbpmJUnitTestCase {
         assertProcessInstanceFinished(processInstance, ksession);
     }
 
-    // FIXME
     @Test
     public void testProcessWithCreatedBy() throws Exception {
         StatefulKnowledgeSession ksession = createKnowledgeSession("humantaskwithcreatedby.bpmn");

@@ -31,7 +31,6 @@ public class ProcessPersistenceHumanTaskOnLaneTest extends JbpmJUnitTestCase {
         setUpDataSource();
     }
 
-    // FIXME
     @Test
     public void testProcess() throws Exception {
         StatefulKnowledgeSession ksession = createKnowledgeSession("HumanTaskOnLane.bpmn2");
@@ -71,7 +70,7 @@ public class ProcessPersistenceHumanTaskOnLaneTest extends JbpmJUnitTestCase {
         taskService.start(task.getId(), taskUser);
         taskService.complete(task.getId(), taskUser, null);
 
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
 }

@@ -15,6 +15,7 @@ import org.jbpm.test.JBPMHelper;
 import org.jbpm.test.JbpmJUnitTestCase;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.kie.KieBase;
@@ -46,11 +47,15 @@ public class TimerPersistenceTest extends JbpmJUnitTestCase {
 
     public TimerPersistenceTest() {
         super(true);
-        this.setPersistence(true);
+    }
+
+    @BeforeClass
+    public static void setup() throws Exception {
+        setUpDataSource();
     }
 
     @Before
-    public void setup() {
+    public void setupTest() {
         System.clearProperty(TIMER_FIRED_PROP);
         System.clearProperty(TIMER_FIRED_TIME_PROP);
     }

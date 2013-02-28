@@ -61,6 +61,9 @@ public class AdminAPIsWithListenerTest extends JbpmJUnitTestCase {
     public void setUp() throws Exception {
         context = setupWithPoolingDataSource("org.jbpm.runtime", false);
         emf = (EntityManagerFactory) context.get(ENTITY_MANAGER_FACTORY);
+        
+        setEntityManagerFactory(emf);
+        setPersistence(true);
 
         conf = new Properties();
         conf.setProperty("mail.smtp.host", "localhost");

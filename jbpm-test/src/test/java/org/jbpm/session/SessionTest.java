@@ -2,39 +2,23 @@ package org.jbpm.session;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 import javax.naming.InitialContext;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.OptimisticLockException;
-import javax.persistence.Persistence;
 import javax.transaction.Synchronization;
 import javax.transaction.UserTransaction;
 
 import org.drools.command.impl.CommandBasedStatefulKnowledgeSession;
 import org.drools.persistence.SingleSessionCommandService;
-import org.drools.persistence.jpa.JpaJDKTimerService;
-import org.drools.persistence.jpa.processinstance.JPAWorkItemManagerFactory;
-import org.jbpm.persistence.processinstance.JPAProcessInstanceManagerFactory;
-import org.jbpm.persistence.processinstance.JPASignalManagerFactory;
 import org.jbpm.task.Status;
 import org.jbpm.task.query.TaskSummary;
 import org.jbpm.task.service.PermissionDeniedException;
 import org.jbpm.test.JbpmJUnitTestCase;
 import org.jbpm.workflow.instance.node.HumanTaskNodeInstance;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.kie.KieBase;
-import org.kie.KnowledgeBase;
-import org.kie.KnowledgeBaseFactory;
-import org.kie.builder.KnowledgeBuilder;
-import org.kie.builder.KnowledgeBuilderFactory;
-import org.kie.io.ResourceFactory;
-import org.kie.io.ResourceType;
-import org.kie.persistence.jpa.JPAKnowledgeService;
-import org.kie.runtime.Environment;
-import org.kie.runtime.EnvironmentName;
-import org.kie.runtime.KieSessionConfiguration;
-import org.kie.runtime.StatefulKnowledgeSession;
 import org.kie.runtime.process.ProcessInstance;
 import org.kie.runtime.process.WorkflowProcessInstance;
 
@@ -52,10 +36,17 @@ public class SessionTest extends JbpmJUnitTestCase {
         super(true);
     }
 
-    @Test
-    public void testDummy() {
+    @BeforeClass
+    public static void setup() throws Exception {
+        setUpDataSource();
     }
 
+    /**
+     * FIXME
+     * @throws Exception
+     */
+    @Test
+    @Ignore
     public void testSingletonSessionMemory() throws Exception {
         for (int i = 0; i < 1000; i++) {
             KieBase kbase = createKnowledgeBase("sample.bpmn");
@@ -72,6 +63,7 @@ public class SessionTest extends JbpmJUnitTestCase {
         }
     }
 
+    @Test
     public void testSingletonSession() throws Exception {
         KieBase kbase = createKnowledgeBase("sample.bpmn");
         SessionManagerFactory factory = new SingletonSessionManagerFactory(
@@ -93,6 +85,12 @@ public class SessionTest extends JbpmJUnitTestCase {
         System.out.println("Done");
     }
 
+    /**
+     * FIXME
+     * @throws Exception
+     */
+    @Test(timeout = 30000)
+    @Ignore
     public void testNewSession() throws Exception {
         KieBase kbase = createKnowledgeBase("sample.bpmn");
         SessionManagerFactory factory = new NewSessionSessionManagerFactory(
@@ -113,6 +111,12 @@ public class SessionTest extends JbpmJUnitTestCase {
         System.out.println("Done");
     }
 
+    /**
+     * FIXME
+     * @throws Exception
+     */
+    @Test
+    @Ignore
     public void testNewSessionFail() throws Exception {
         KieBase kbase = createKnowledgeBase("sample.bpmn");
         SessionManagerFactory factory = new NewSessionSessionManagerFactory(
@@ -199,6 +203,7 @@ public class SessionTest extends JbpmJUnitTestCase {
         factory.dispose();
     }
 
+    @Test
     public void testNewSessionDispose() throws Exception {
         KieBase kbase = createKnowledgeBase("sample.bpmn");
         SessionManagerFactory factory = new NewSessionSessionManagerFactory(
@@ -227,6 +232,12 @@ public class SessionTest extends JbpmJUnitTestCase {
         factory.dispose();
     }
 
+    /**
+     * FIXME
+     * @throws Exception
+     */
+    @Test
+    @Ignore
     public void testNewSessionFailBefore() throws Exception {
         KieBase kbase = createKnowledgeBase("sampleFailBefore.bpmn");
         SessionManagerFactory factory = new NewSessionSessionManagerFactory(
@@ -257,6 +268,12 @@ public class SessionTest extends JbpmJUnitTestCase {
         factory.dispose();
     }
 
+    /**
+     * FIXME
+     * @throws Exception
+     */
+    @Test
+    @Ignore
     public void testNewSessionFailAfter() throws Exception {
         KieBase kbase = createKnowledgeBase("sampleFailAfter.bpmn");
         SessionManagerFactory factory = new NewSessionSessionManagerFactory(
@@ -303,6 +320,7 @@ public class SessionTest extends JbpmJUnitTestCase {
         factory.dispose();
     }
 
+    @Test
     public void testNewSessionFailAfter2() throws Exception {
         KieBase kbase = createKnowledgeBase("sampleFailAfter.bpmn");
         SessionManagerFactory factory = new NewSessionSessionManagerFactory(

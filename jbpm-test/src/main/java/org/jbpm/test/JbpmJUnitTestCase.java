@@ -204,11 +204,19 @@ public abstract class JbpmJUnitTestCase extends Assert {
         if (setupDataSource) {
             taskService = null;
             if (emf != null) {
-                emf.close();
+                try {
+                    emf.close();
+                } catch (Exception ex) {
+                    // ignore
+                }
                 emf = null;
             }
             if (ds != null) {
-                ds.close();
+                try {
+                    ds.close();
+                } catch (Exception ex) {
+                    // ignore
+                }
                 ds = null;
             }
             server.stop();
@@ -571,7 +579,8 @@ public abstract class JbpmJUnitTestCase extends Assert {
     }
 
     public void assertProcessInstanceActive(ProcessInstance processInstance) {
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE);
+        assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE ||
+                processInstance.getState() == ProcessInstance.STATE_PENDING);
     }
 
     public void assertProcessInstanceFinished(ProcessInstance processInstance, KieSession ksession) {
@@ -841,22 +850,20 @@ public abstract class JbpmJUnitTestCase extends Assert {
     }
 
     public void setEntityManagerFactory(EntityManagerFactory emf) {
-        this.emf = emf;
+        JbpmJUnitTestCase.emf = emf;
     }
 
     public void setPoolingDataSource(PoolingDataSource ds) {
-        this.ds = ds;
+        JbpmJUnitTestCase.ds = ds;
     }
 
     public TaskService getTaskService(StatefulKnowledgeSession ksession) {
-        if (taskService == null) {
-            taskService = new org.jbpm.task.service.TaskService(emf,
-                    SystemEventListenerFactory.getSystemEventListener());
+        taskService = new org.jbpm.task.service.TaskService(emf,
+                SystemEventListenerFactory.getSystemEventListener());
 
-            UserGroupCallbackManager.getInstance().setCallback(
-                    new DefaultUserGroupCallbackImpl(
-                            "classpath:/usergroups.properties"));
-        }
+        UserGroupCallbackManager.getInstance().setCallback(
+                new DefaultUserGroupCallbackImpl(
+                        "classpath:/usergroups.properties"));
         LocalTaskService localTaskService = new LocalTaskService(taskService);
         LocalHTWorkItemHandler humanTaskHandler = new LocalHTWorkItemHandler(
                 localTaskService, ksession, OnErrorAction.RETHROW);

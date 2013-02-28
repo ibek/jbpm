@@ -160,7 +160,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
     @RequirePersistence
     public void testScriptTaskWithHistoryLog() throws Exception {
         ProcessInstance processInstance = ksession.startProcess("ScriptTask");
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        assertProcessInstanceCompleted(processInstance);
         
         List<NodeInstanceLog> logs = JPAProcessInstanceDbLog.findNodeInstances(processInstance.getId());
         assertNotNull(logs);

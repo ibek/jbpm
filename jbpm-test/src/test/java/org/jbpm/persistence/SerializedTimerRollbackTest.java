@@ -58,7 +58,7 @@ public class SerializedTimerRollbackTest extends JbpmJUnitTestCase {
     @Before
     public void setup() {
         ds = new PoolingDataSource();
-        ds.setUniqueName("jdbc/jbpm-ds");
+        ds.setUniqueName("jdbc/testDS1");
         ds.setClassName("org.h2.jdbcx.JdbcDataSource");
         ds.setMaxPoolSize(3);
         ds.setAllowLocalTransactions(true);

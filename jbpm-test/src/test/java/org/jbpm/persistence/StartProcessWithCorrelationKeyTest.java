@@ -25,6 +25,7 @@ import org.jbpm.test.JbpmJUnitTestCase;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.kie.KieBase;
 import org.kie.KieInternalServices;
 import org.kie.process.CorrelationAwareProcessRuntime;
 import org.kie.process.CorrelationKey;
@@ -32,20 +33,19 @@ import org.kie.process.CorrelationKeyFactory;
 import org.kie.runtime.StatefulKnowledgeSession;
 import org.kie.runtime.process.ProcessInstance;
 
-public abstract class StartProcessWithCorrelationKeyTest extends JbpmJUnitTestCase {
+public class StartProcessWithCorrelationKeyTest extends JbpmJUnitTestCase {
     
     private CorrelationKeyFactory factory;
     private StatefulKnowledgeSession ksession;
     
     public StartProcessWithCorrelationKeyTest() {
+        super(true);
         factory = KieInternalServices.Factory.get().newCorrelationKeyFactory();
     }
 
     @BeforeClass
     public static void setup() throws Exception {
-        if (PERSISTENCE) {
-            setUpDataSource();
-        }
+        setUpDataSource();
     }
 
     @After
@@ -88,16 +88,17 @@ public abstract class StartProcessWithCorrelationKeyTest extends JbpmJUnitTestCa
         taskService.complete(task.getId(), "mary", null);
 
         assertNodeTriggered(processInstance.getId(), "End");
-        assertProcessInstanceCompleted(processInstance);       
+        assertProcessInstanceFinished(processInstance, ksession);       
     }
-    
+ 
     @Test
     public void testProcessWithBusinessKey() throws Exception {
         ksession = createKnowledgeSession("humantask.bpmn");
         TaskService taskService = getTaskService(ksession);
-        
-        ProcessInstance processInstance = ((CorrelationAwareProcessRuntime)ksession).startProcess("com.sample.bpmn.hello", getCorrelationKey(), null);
 
+        ProcessInstance processInstance = ((CorrelationAwareProcessRuntime)ksession).createProcessInstance("com.sample.bpmn.hello", getCorrelationKey(), null);
+        ksession.startProcessInstance(processInstance.getId());
+        
         assertProcessInstanceActive(processInstance);
         assertNodeTriggered(processInstance.getId(), "Start", "Task 1");       
         
@@ -122,9 +123,9 @@ public abstract class StartProcessWithCorrelationKeyTest extends JbpmJUnitTestCa
         taskService.complete(task.getId(), "mary", null);
 
         assertNodeTriggered(processInstance.getId(), "End");
-        assertProcessInstanceCompleted(processInstance);       
+        assertProcessInstanceFinished(processInstance, ksession);   
     }
-
+    
     @Test
     public void testProcessWithBusinessKeyFailOnDuplicatedBusinessKey() throws Exception {
         ksession = createKnowledgeSession("humantask.bpmn");
@@ -164,7 +165,7 @@ public abstract class StartProcessWithCorrelationKeyTest extends JbpmJUnitTestCa
         taskService.complete(task.getId(), "mary", null);
 
         assertNodeTriggered(processInstance.getId(), "End");
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);  
     }
     
     @Test
@@ -199,7 +200,7 @@ public abstract class StartProcessWithCorrelationKeyTest extends JbpmJUnitTestCa
         taskService.complete(task.getId(), "mary", null);
 
         assertNodeTriggered(processInstance.getId(), "End");
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);  
         
         
         processInstance = ((CorrelationAwareProcessRuntime)ksession).startProcess("com.sample.bpmn.hello", getCorrelationKey(), null);
@@ -228,7 +229,7 @@ public abstract class StartProcessWithCorrelationKeyTest extends JbpmJUnitTestCa
         taskService.complete(task.getId(), "mary", null);
 
         assertNodeTriggered(processInstance.getId(), "End");
-        assertProcessInstanceCompleted(processInstance);     
+        assertProcessInstanceFinished(processInstance, ksession);     
     }
     
     @Test
@@ -262,7 +263,7 @@ public abstract class StartProcessWithCorrelationKeyTest extends JbpmJUnitTestCa
         taskService.complete(task.getId(), "mary", null);
 
         assertNodeTriggered(processInstance.getId(), "End");
-        assertProcessInstanceCompleted(processInstance);       
+        assertProcessInstanceFinished(processInstance, ksession);      
     }
     
     @Test
@@ -300,11 +301,10 @@ public abstract class StartProcessWithCorrelationKeyTest extends JbpmJUnitTestCa
         taskService.complete(task.getId(), "mary", null);
 
         assertNodeTriggered(processInstance.getId(), "End");
-        assertProcessInstanceCompleted(processInstance);       
+        assertProcessInstanceFinished(processInstance, ksession);    
     }
     
     private CorrelationKey getCorrelationKey() {
-        
         return factory.newCorrelationKey("mybusinesskey");
     }
     
