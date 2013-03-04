@@ -21,7 +21,7 @@
 
     <!-- nodes -->
     <startEvent id="_1" name="" />
-    <userTask id="_2" name="Task">
+    <userTask id="_2" name="Human Task">
       <ioSpecification>
         <dataInput id='coId' name='coId'/>
         <inputSet>

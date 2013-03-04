@@ -211,7 +211,6 @@ public class DataTest extends JbpmJUnitTestCase {
         params.put("instanceMetadata", document.getFirstChild());
         ProcessInstance processInstance = ksession.startProcess(
                 "DataInputAssociations", params);
-        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -234,7 +233,6 @@ public class DataTest extends JbpmJUnitTestCase {
         params.put("instanceMetadata", "hello");
         ProcessInstance processInstance = ksession.startProcess(
                 "DataInputAssociationsStringObject", params);
-        assertProcessInstanceCompleted(processInstance);
     }
 
     /**
@@ -281,7 +279,6 @@ public class DataTest extends JbpmJUnitTestCase {
         params.put("instanceMetadata", document.getFirstChild());
         ProcessInstance processInstance = ksession.startProcess(
                 "DataInputAssociationsLazyCreating", params);
-        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -302,7 +299,6 @@ public class DataTest extends JbpmJUnitTestCase {
                 });
         ProcessInstance processInstance = ksession.startProcess(
                 "DataInputAssociationsString", null);
-        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -324,7 +320,6 @@ public class DataTest extends JbpmJUnitTestCase {
                 });
         ProcessInstance processInstance = ksession.startProcess(
                 "DataInputAssociationsStringNoQuotes", null);
-        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -349,7 +344,6 @@ public class DataTest extends JbpmJUnitTestCase {
                 });
         ProcessInstance processInstance = ksession.startProcess(
                 "DataInputAssociationsXMLLiteral", null);
-        assertProcessInstanceCompleted(processInstance);
     }
 
     /**
@@ -521,7 +515,7 @@ public class DataTest extends JbpmJUnitTestCase {
         ksession.getWorkItemManager().completeWorkItem(
                 workItemHandler.getWorkItem().getId(), res);
         
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -536,8 +530,8 @@ public class DataTest extends JbpmJUnitTestCase {
         res.put("testHT", "true");
         ksession.getWorkItemManager().completeWorkItem(
                 workItemHandler.getWorkItem().getId(), res);
-        
-        assertProcessInstanceCompleted(processInstance);
+
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -552,8 +546,8 @@ public class DataTest extends JbpmJUnitTestCase {
         res.put("testHT", "25");
         ksession.getWorkItemManager().completeWorkItem(
                 workItemHandler.getWorkItem().getId(), res);
-        
-        assertProcessInstanceCompleted(processInstance);
+
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -568,8 +562,8 @@ public class DataTest extends JbpmJUnitTestCase {
         res.put("testHT", "5.5");
         ksession.getWorkItemManager().completeWorkItem(
                 workItemHandler.getWorkItem().getId(), res);
-        
-        assertProcessInstanceCompleted(processInstance);
+
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -587,8 +581,8 @@ public class DataTest extends JbpmJUnitTestCase {
         res.put("testHT", personAsXml);
         ksession.getWorkItemManager().completeWorkItem(
                 workItemHandler.getWorkItem().getId(), res);
-        
-        assertProcessInstanceCompleted(processInstance);
+
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
 }

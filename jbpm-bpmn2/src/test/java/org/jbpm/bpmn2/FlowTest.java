@@ -88,7 +88,8 @@ public class FlowTest extends JbpmJUnitTestCase {
         params.put("y", "Second");
         ProcessInstance processInstance = ksession.startProcess(
                 "ExclusiveSplit", params);
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -108,7 +109,8 @@ public class FlowTest extends JbpmJUnitTestCase {
         params.put("y", "Second");
         ProcessInstance processInstance = ksession.startProcess(
                 "ExclusiveSplitXPathAdvanced", params);
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -128,7 +130,8 @@ public class FlowTest extends JbpmJUnitTestCase {
         params.put("y", "Second");
         ProcessInstance processInstance = ksession.startProcess(
                 "ExclusiveSplitXPathAdvancedVarsNotSignaled", params);
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -148,7 +151,8 @@ public class FlowTest extends JbpmJUnitTestCase {
         params.put("y", "Second");
         ProcessInstance processInstance = ksession.startProcess(
                 "ExclusiveSplitXPathAdvancedWithVars", params);
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -160,7 +164,8 @@ public class FlowTest extends JbpmJUnitTestCase {
         params.put("y", "Second");
         ProcessInstance processInstance = ksession.startProcess(
                 "ExclusiveSplitPriority", params);
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -172,7 +177,8 @@ public class FlowTest extends JbpmJUnitTestCase {
         params.put("y", "Second");
         ProcessInstance processInstance = ksession.startProcess(
                 "ExclusiveSplitDefault", params);
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -181,7 +187,8 @@ public class FlowTest extends JbpmJUnitTestCase {
         params.put("x", 15);
         ProcessInstance processInstance = ksession.startProcess(
                 "InclusiveSplit", params);
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -202,7 +209,7 @@ public class FlowTest extends JbpmJUnitTestCase {
         for (WorkItem wi : activeWorkItems) {
             ksession.getWorkItemManager().completeWorkItem(wi.getId(), null);
         }
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -223,7 +230,7 @@ public class FlowTest extends JbpmJUnitTestCase {
         for (WorkItem wi : activeWorkItems) {
             ksession.getWorkItemManager().completeWorkItem(wi.getId(), null);
         }
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -244,7 +251,7 @@ public class FlowTest extends JbpmJUnitTestCase {
         for (WorkItem wi : activeWorkItems) {
             ksession.getWorkItemManager().completeWorkItem(wi.getId(), null);
         }
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -273,7 +280,7 @@ public class FlowTest extends JbpmJUnitTestCase {
         for (WorkItem wi : activeWorkItems) {
             ksession.getWorkItemManager().completeWorkItem(wi.getId(), null);
         }
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -294,7 +301,7 @@ public class FlowTest extends JbpmJUnitTestCase {
         for (WorkItem wi : activeWorkItems) {
             ksession.getWorkItemManager().completeWorkItem(wi.getId(), null);
         }
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -315,7 +322,7 @@ public class FlowTest extends JbpmJUnitTestCase {
         for (WorkItem wi : activeWorkItems) {
             ksession.getWorkItemManager().completeWorkItem(wi.getId(), null);
         }
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -341,7 +348,7 @@ public class FlowTest extends JbpmJUnitTestCase {
 
         ksession.getWorkItemManager().completeWorkItem(
                 activeWorkItems.get(2).getId(), null);
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -370,7 +377,7 @@ public class FlowTest extends JbpmJUnitTestCase {
 
         ksession.getWorkItemManager().completeWorkItem(
                 activeWorkItems.get(1).getId(), null);
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -398,7 +405,7 @@ public class FlowTest extends JbpmJUnitTestCase {
 
         ksession.getWorkItemManager().completeWorkItem(
                 activeWorkItems.get(3).getId(), null);
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -407,7 +414,7 @@ public class FlowTest extends JbpmJUnitTestCase {
         params.put("x", -5);
         ProcessInstance processInstance = ksession.startProcess(
                 "InclusiveSplitDefault", params);
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -430,7 +437,8 @@ public class FlowTest extends JbpmJUnitTestCase {
                         .getFirstChild());
         ProcessInstance processInstance = ksession.startProcess("XORGateway",
                 params);
-        assertTrue(processInstance.getState() == ProcessInstance.STATE_COMPLETED);
+        
+        assertProcessInstanceCompleted(processInstance);
     }
 
     @Test
@@ -457,7 +465,7 @@ public class FlowTest extends JbpmJUnitTestCase {
         assertNotNull(workItem);
         assertEquals("mary", workItem.getParameter("ActorId"));
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
 }

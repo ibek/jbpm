@@ -68,7 +68,7 @@ public class ResourceTest extends JbpmJUnitTestCase {
 
     @Test
     public void testMultipleProcessInOneFile() throws Exception {
-        KieBase kbase = createKnowledgeBase("other/MultipleProcessInOneFile.bpmn2");
+        KieBase kbase = createKnowledgeBase("manual/MultipleProcessInOneFile.bpmn2");
         Properties properties = new Properties();
         properties.put("drools.processInstanceManagerFactory", "org.jbpm.process.instance.impl.DefaultProcessInstanceManagerFactory");
         properties.put("drools.processSignalManagerFactory", "org.jbpm.process.instance.event.DefaultSignalManagerFactory");

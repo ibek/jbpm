@@ -230,7 +230,7 @@ public class StartTest extends JbpmJUnitTestCase {
         assertNotNull(workItem);
         assertEquals("john", workItem.getParameter("ActorId"));
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -286,7 +286,7 @@ public class StartTest extends JbpmJUnitTestCase {
         assertNotNull(workItem);
         assertEquals("john", workItem.getParameter("ActorId"));
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test

@@ -312,7 +312,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         restoreSession(ksession, true);
         ksession.fireAllRules();
         assertTrue(list.size() == 1);
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -327,7 +327,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         restoreSession(ksession, true);
         ksession.fireAllRules();
         assertTrue(list.size() == 0);
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -471,10 +471,10 @@ public class ActivityTest extends JbpmJUnitTestCase {
         ProcessInstance processInstance1 = ksession.startProcess("RuleTask");
         ProcessInstance processInstance2 = ksession2.startProcess("RuleTask");
         ksession.fireAllRules();
-        assertProcessInstanceCompleted(processInstance1);
+        assertProcessInstanceFinished(processInstance1, ksession);
         assertProcessInstanceActive(processInstance2);
         ksession2.fireAllRules();
-        assertProcessInstanceCompleted(processInstance2);
+        assertProcessInstanceFinished(processInstance2, ksession);
     }
 
     @Test
@@ -489,7 +489,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         assertNotNull(workItem);
         assertEquals("john", workItem.getParameter("ActorId"));
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -636,8 +636,8 @@ public class ActivityTest extends JbpmJUnitTestCase {
         
         ksession.getWorkItemManager().completeWorkItem(workItems.get(2).getId(), null);
         ksession.getWorkItemManager().completeWorkItem(workItems.get(3).getId(), null);
-        
-        assertProcessInstanceCompleted(processInstance);
+
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -717,7 +717,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
                 workItemHandler);
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -750,7 +750,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         assertProcessInstanceActive(processInstance);
         workItem = workItemHandler2.getWorkItem();
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -779,7 +779,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         // assertProcessInstanceActive(processInstance);
         // workItem = workItemHandler2.getWorkItem();
         // ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -808,7 +808,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         assertProcessInstanceActive(processInstance);
         workItem = workItemHandler2.getWorkItem();
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -825,7 +825,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         assertProcessInstanceActive(processInstance);
         ksession.insert(new Person());
         ksession.signalEvent("Task3", null, processInstance.getId());
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -851,7 +851,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         assertProcessInstanceActive(processInstance);
         ksession.insert(new Person());
         ksession.signalEvent("Task3", null, processInstance.getId());
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -874,7 +874,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         assertProcessInstanceActive(processInstance);
         ksession.insert(new Person());
         ksession.signalEvent("Task3", null, processInstance.getId());
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -910,7 +910,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         assertEquals(ProcessInstance.STATE_ACTIVE, processInstance.getState());
         ksession = restoreSession(ksession, true);
         receiveTaskHandler.messageReceived("HelloMessage", "Hello john!");
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -924,7 +924,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         
         int fired = ksession.fireAllRules();
         assertEquals(1, fired);
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -1016,7 +1016,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         output.put("isCheckedCheckbox", "true");
         ksession.getWorkItemManager()
                 .completeWorkItem(workItem.getId(), output);
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
 
     @Test
@@ -1032,7 +1032,7 @@ public class ActivityTest extends JbpmJUnitTestCase {
         assertNotNull(workItem);
         assertEquals("john", workItem.getParameter("ActorId"));
         ksession.getWorkItemManager().completeWorkItem(workItem.getId(), null);
-        assertProcessInstanceCompleted(processInstance);
+        assertProcessInstanceFinished(processInstance, ksession);
     }
     
     /**

@@ -46,7 +46,7 @@ public class XMLTest extends JbpmJUnitTestCase {
     private Logger logger = LoggerFactory.getLogger(XMLTest.class);
    
 	private static final String[] processes = {
-		"/other/SimpleXMLProcess.bpmn2",
+		"/manual/SimpleXMLProcess.bpmn2",
 //		"/activity/MinimalProcess.xml",
 	};
 
