@@ -13,6 +13,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
 import org.jbpm.persistence.objects.MockUserInfo;
+import org.jbpm.process.workitem.wsht.LocalHTWorkItemHandler;
 import org.jbpm.process.workitem.wsht.SyncWSHumanTaskHandler;
 import org.jbpm.task.Group;
 import org.jbpm.task.User;
@@ -117,8 +118,7 @@ public class LocalTasksServiceTest extends JbpmTestCase {
         KieBase kbase = createKnowledgeBase("Evaluation2.bpmn");
         StatefulKnowledgeSession ksession = createKnowledgeSession(kbase);
         KnowledgeRuntimeLoggerFactory.newConsoleLogger(ksession);
-        SyncWSHumanTaskHandler htHandler = new SyncWSHumanTaskHandler(
-                localTaskService, ksession);
+        LocalHTWorkItemHandler htHandler = new LocalHTWorkItemHandler(localTaskService, ksession);
         htHandler.setLocal(true);
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
                 htHandler);
