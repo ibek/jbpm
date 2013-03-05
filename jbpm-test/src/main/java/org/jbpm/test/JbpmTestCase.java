@@ -18,19 +18,22 @@ import org.jbpm.process.audit.NodeInstanceLog;
 import org.jbpm.process.audit.AuditLoggerFactory.Type;
 import org.jbpm.process.instance.event.DefaultSignalManagerFactory;
 import org.jbpm.process.instance.impl.DefaultProcessInstanceManagerFactory;
+import org.jbpm.process.workitem.wsht.HornetQHTWorkItemHandler;
 import org.jbpm.process.workitem.wsht.LocalHTWorkItemHandler;
 import org.jbpm.task.TaskService;
 import org.jbpm.task.identity.DefaultUserGroupCallbackImpl;
 import org.jbpm.task.identity.UserGroupCallbackManager;
+import org.jbpm.task.service.SyncTaskServiceWrapper;
+import org.jbpm.task.service.hornetq.AsyncHornetQTaskClient;
+import org.jbpm.task.service.hornetq.HornetQTaskServer;
 import org.jbpm.task.service.local.LocalTaskService;
+import org.jbpm.task.service.mina.MinaTaskServer;
 import org.jbpm.task.utils.OnErrorAction;
 import org.jbpm.workflow.instance.impl.WorkflowProcessInstanceImpl;
-import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
-import org.junit.rules.TestName;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
@@ -83,6 +86,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -108,6 +112,7 @@ public abstract class JbpmTestCase extends Assert {
     private boolean sessionPersistence = false;
     private static H2Server server = new H2Server();
     private static org.jbpm.task.service.TaskService taskService;
+    private static HornetQTaskServer hornetQTaskServer;
 
     private TestWorkItemHandler workItemHandler = new TestWorkItemHandler();
 
@@ -240,6 +245,11 @@ public abstract class JbpmTestCase extends Assert {
                             + " at the end of the test.");
                 }
             }
+        }
+        
+        if (hornetQTaskServer != null) {
+            hornetQTaskServer.stop();
+            hornetQTaskServer = null;
         }
     }
 
@@ -872,10 +882,38 @@ public abstract class JbpmTestCase extends Assert {
                 humanTaskHandler);
         return localTaskService;
     }
+    
+    public TaskService getHornetQTaskService(StatefulKnowledgeSession ksession) {
+        if (hornetQTaskServer == null) {
+            startHornetQTaskService();
+        }
+        
+        UserGroupCallbackManager.getInstance().setCallback(
+                new DefaultUserGroupCallbackImpl(
+                        "classpath:/usergroups.properties"));
+        HornetQHTWorkItemHandler humanTaskHandler = new HornetQHTWorkItemHandler(ksession, OnErrorAction.RETHROW);
+        ksession.getWorkItemManager().registerWorkItemHandler("Human Task", humanTaskHandler);
+        TaskService taskService = new SyncTaskServiceWrapper(new AsyncHornetQTaskClient("hornetQTaskClient"));
+        return taskService;
+    }
+    
+    public org.jbpm.task.service.TaskService startHornetQTaskService() {
+        if (taskService == null) {
+            taskService = new org.jbpm.task.service.TaskService(emf, SystemEventListenerFactory.getSystemEventListener());
+        }
+        hornetQTaskServer = new HornetQTaskServer(taskService, 5153);
+        Thread thread = new Thread(hornetQTaskServer);
+        thread.start();
+        return taskService;
+    }
 
     public org.jbpm.task.service.TaskService getService() {
         return new org.jbpm.task.service.TaskService(emf,
                 SystemEventListenerFactory.getSystemEventListener());
+    }
+    
+    public void setTaskService(org.jbpm.task.service.TaskService taskService) {
+        JbpmTestCase.taskService = taskService;
     }
 
     private static class H2Server {
