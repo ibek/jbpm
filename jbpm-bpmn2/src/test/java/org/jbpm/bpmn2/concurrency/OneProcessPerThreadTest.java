@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jbpm.bpmn2.objects.Status;
-import org.jbpm.test.JbpmJUnitTestCase;
+import org.jbpm.test.JBPMJUnitTestCase;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
  * This test takes time and resources, please only run it locally
  */
 @Ignore
-public class OneProcessPerThreadTest extends JbpmJUnitTestCase {
+public class OneProcessPerThreadTest extends JBPMJUnitTestCase {
 
     private static final int THREAD_COUNT = 500; // FIXME doesn't work with 1000
     private static volatile AtomicInteger started = new AtomicInteger(0);

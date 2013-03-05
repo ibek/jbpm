@@ -13,7 +13,7 @@ import org.drools.persistence.SingleSessionCommandService;
 import org.jbpm.task.Status;
 import org.jbpm.task.query.TaskSummary;
 import org.jbpm.task.service.PermissionDeniedException;
-import org.jbpm.test.JbpmJUnitTestCase;
+import org.jbpm.test.JBPMJUnitTestCase;
 import org.jbpm.workflow.instance.node.HumanTaskNodeInstance;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -24,7 +24,7 @@ import org.kie.runtime.process.WorkflowProcessInstance;
 
 import bitronix.tm.TransactionManagerServices;
 
-public class SessionTest extends JbpmJUnitTestCase {
+public class SessionTest extends JBPMJUnitTestCase {
 
     private int nbThreadsProcess = 10;
     private int nbThreadsTask = 10;

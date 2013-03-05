@@ -24,7 +24,7 @@ import javax.inject.Inject;
 
 import org.jbpm.bpmn2.handler.SendTaskHandler;
 import org.jbpm.process.instance.impl.demo.SystemOutWorkItemHandler;
-import org.jbpm.test.JbpmJUnitTestCase;
+import org.jbpm.test.JBPMJUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -39,7 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @RunWith(CDITestRunner.class)
-public class EndTest extends JbpmJUnitTestCase {
+public class EndTest extends JBPMJUnitTestCase {
 
     @Inject
     @KBase("end")

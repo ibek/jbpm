@@ -31,7 +31,7 @@ import org.jbpm.bpmn2.core.DataStore;
 import org.jbpm.bpmn2.core.Definitions;
 import org.jbpm.process.instance.impl.demo.DoNothingWorkItemHandler;
 import org.jbpm.process.instance.impl.demo.SystemOutWorkItemHandler;
-import org.jbpm.test.JbpmJUnitTestCase;
+import org.jbpm.test.JBPMJUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -52,7 +52,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 @RunWith(CDITestRunner.class)
-public class DataTest extends JbpmJUnitTestCase {
+public class DataTest extends JBPMJUnitTestCase {
 
     @Inject
     @KBase("data")

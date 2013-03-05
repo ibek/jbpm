@@ -32,7 +32,7 @@ import org.jbpm.bpmn2.xml.BPMNSemanticModule;
 import org.jbpm.bpmn2.xml.XmlBPMNProcessDumper;
 import org.jbpm.compiler.xml.XmlProcessReader;
 import org.jbpm.ruleflow.core.RuleFlowProcess;
-import org.jbpm.test.JbpmJUnitTestCase;
+import org.jbpm.test.JBPMJUnitTestCase;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.kie.definition.process.Process;
@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
-public class XMLTest extends JbpmJUnitTestCase {
+public class XMLTest extends JBPMJUnitTestCase {
 	
     private Logger logger = LoggerFactory.getLogger(XMLTest.class);
    

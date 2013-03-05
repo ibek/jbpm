@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.jbpm.task.TaskService;
 import org.jbpm.task.query.TaskSummary;
-import org.jbpm.test.JbpmJUnitTestCase;
+import org.jbpm.test.JBPMJUnitTestCase;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.kie.runtime.StatefulKnowledgeSession;
@@ -15,7 +15,7 @@ import org.kie.runtime.process.ProcessInstance;
 /**
  * This is a sample file to test a process.
  */
-public class ProcessHumanTaskTest extends JbpmJUnitTestCase {
+public class ProcessHumanTaskTest extends JBPMJUnitTestCase {
 
     public ProcessHumanTaskTest() {
         super(true);

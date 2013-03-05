@@ -3,14 +3,14 @@ package org.jbpm.examples.quickstarts;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.jbpm.test.JbpmJUnitTestCase;
+import org.jbpm.test.JBPMJUnitTestCase;
 import org.junit.Test;
 import org.kie.runtime.StatefulKnowledgeSession;
 
 /**
  * This is a sample file to test a process.
  */
-public class JavaServiceQuickstartTest extends JbpmJUnitTestCase {
+public class JavaServiceQuickstartTest extends JBPMJUnitTestCase {
 
 	@Test
 	public void testProcess() throws Exception {

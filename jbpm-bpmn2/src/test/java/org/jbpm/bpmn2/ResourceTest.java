@@ -17,7 +17,7 @@ package org.jbpm.bpmn2;
 
 import java.util.Properties;
 
-import org.jbpm.test.JbpmJUnitTestCase;
+import org.jbpm.test.JBPMJUnitTestCase;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -29,7 +29,7 @@ import org.kie.runtime.process.ProcessInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ResourceTest extends JbpmJUnitTestCase {
+public class ResourceTest extends JBPMJUnitTestCase {
 
     private static final String resourceFolder = "activity/";
 

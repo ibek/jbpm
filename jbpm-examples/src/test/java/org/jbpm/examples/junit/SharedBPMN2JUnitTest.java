@@ -25,7 +25,7 @@ import org.jbpm.bpmn2.handler.ReceiveTaskHandler;
 import org.jbpm.bpmn2.handler.SendTaskHandler;
 import org.jbpm.process.instance.impl.demo.DoNothingWorkItemHandler;
 import org.jbpm.process.instance.impl.demo.SystemOutWorkItemHandler;
-import org.jbpm.test.JbpmJUnitTestCase;
+import org.jbpm.test.JBPMJUnitTestCase;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.kie.KieBase;
@@ -39,7 +39,7 @@ import org.kie.runtime.process.WorkItemHandler;
 import org.kie.runtime.process.WorkItemManager;
 import org.kie.runtime.process.WorkflowProcessInstance;
 
-public abstract class SharedBPMN2JUnitTest extends JbpmJUnitTestCase {
+public abstract class SharedBPMN2JUnitTest extends JBPMJUnitTestCase {
     
     private static String RESOURCES = "junit/";
     

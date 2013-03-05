@@ -19,14 +19,14 @@ package org.jbpm.bpmn2;
 import org.jbpm.bpmn2.xml.XmlBPMNProcessDumper;
 import org.jbpm.ruleflow.core.RuleFlowProcess;
 import org.jbpm.ruleflow.core.RuleFlowProcessFactory;
-import org.jbpm.test.JbpmJUnitTestCase;
+import org.jbpm.test.JBPMJUnitTestCase;
 import org.junit.Test;
 import org.kie.KieBase;
 import org.kie.io.Resource;
 import org.kie.io.ResourceFactory;
 import org.kie.runtime.StatefulKnowledgeSession;
 
-public class ProcessFactoryTest extends JbpmJUnitTestCase {
+public class ProcessFactoryTest extends JBPMJUnitTestCase {
 
     public ProcessFactoryTest() {
         super(false);
