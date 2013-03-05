@@ -12,7 +12,7 @@ import javax.persistence.EntityManagerFactory;
 
 import org.drools.process.instance.WorkItemHandler;
 import org.jbpm.test.JBPMHelper;
-import org.jbpm.test.JBPMJUnitTestCase;
+import org.jbpm.test.JbpmTestCase;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 /**
  * See JBPM-3170/JBPM-3391
  */
-public class TimerPersistenceTest extends JBPMJUnitTestCase {
+public class TimerPersistenceTest extends JbpmTestCase {
 
     // General setup
     private static Logger testLogger = LoggerFactory

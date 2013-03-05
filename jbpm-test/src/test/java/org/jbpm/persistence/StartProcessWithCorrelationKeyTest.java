@@ -21,7 +21,7 @@ import java.util.List;
 import org.jbpm.persistence.correlation.JPACorrelationKeyFactory;
 import org.jbpm.task.TaskService;
 import org.jbpm.task.query.TaskSummary;
-import org.jbpm.test.JBPMJUnitTestCase;
+import org.jbpm.test.JbpmTestCase;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -33,7 +33,7 @@ import org.kie.process.CorrelationKeyFactory;
 import org.kie.runtime.StatefulKnowledgeSession;
 import org.kie.runtime.process.ProcessInstance;
 
-public class StartProcessWithCorrelationKeyTest extends JBPMJUnitTestCase {
+public class StartProcessWithCorrelationKeyTest extends JbpmTestCase {
     
     private CorrelationKeyFactory factory;
     private StatefulKnowledgeSession ksession;

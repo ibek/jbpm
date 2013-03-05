@@ -74,7 +74,7 @@ import static org.jbpm.test.JBPMHelper.txStateName;
  *
  * Please keep this test class in the org.jbpm.bpmn2 package or otherwise give it a unique name. 
  *
- * @deprecated JBPMJUnitTestCase with KIE API should be used instead
+ * @deprecated JbpmTestCase with KIE API should be used instead
  *
  */
 @Deprecated

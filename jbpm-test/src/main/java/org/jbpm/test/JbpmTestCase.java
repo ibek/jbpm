@@ -97,7 +97,7 @@ import static org.jbpm.test.JBPMHelper.txStateName;
  * Please keep this test class in the org.jbpm.bpmn2 package or otherwise give it a unique name.
  * 
  */
-public abstract class JBPMJUnitTestCase extends Assert {
+public abstract class JbpmTestCase extends Assert {
 
     protected final static String EOL = System.getProperty("line.separator");
 
@@ -156,11 +156,11 @@ public abstract class JBPMJUnitTestCase extends Assert {
         }
     }
 
-    public JBPMJUnitTestCase() {
+    public JbpmTestCase() {
         this(PERSISTENCE);
     }
 
-    public JBPMJUnitTestCase(boolean sessionPersistance) {
+    public JbpmTestCase(boolean sessionPersistance) {
         System.setProperty("jbpm.user.group.mapping",
                 "classpath:/usergroups.properties");
         System.setProperty("jbpm.usergroup.callback",
@@ -850,11 +850,11 @@ public abstract class JBPMJUnitTestCase extends Assert {
     }
 
     public void setEntityManagerFactory(EntityManagerFactory emf) {
-        JBPMJUnitTestCase.emf = emf;
+        JbpmTestCase.emf = emf;
     }
 
     public void setPoolingDataSource(PoolingDataSource ds) {
-        JBPMJUnitTestCase.ds = ds;
+        JbpmTestCase.ds = ds;
     }
 
     public TaskService getTaskService(StatefulKnowledgeSession ksession) {

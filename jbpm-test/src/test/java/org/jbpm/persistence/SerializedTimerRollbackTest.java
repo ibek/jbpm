@@ -31,7 +31,7 @@ import org.jbpm.task.query.TaskSummary;
 import org.jbpm.task.service.TaskService;
 import org.jbpm.task.service.local.LocalTaskService;
 import org.jbpm.task.utils.OnErrorAction;
-import org.jbpm.test.JBPMJUnitTestCase;
+import org.jbpm.test.JbpmTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,7 +46,7 @@ import org.kie.runtime.process.ProcessInstance;
 import bitronix.tm.TransactionManagerServices;
 import bitronix.tm.resource.jdbc.PoolingDataSource;
 
-public class SerializedTimerRollbackTest extends JBPMJUnitTestCase {
+public class SerializedTimerRollbackTest extends JbpmTestCase {
 
     private PoolingDataSource ds;
     private EntityManagerFactory emf;

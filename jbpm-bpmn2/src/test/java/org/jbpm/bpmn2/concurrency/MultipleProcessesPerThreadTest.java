@@ -6,7 +6,7 @@ import java.util.concurrent.CountDownLatch;
 
 import org.jbpm.bpmn2.objects.Status;
 import org.jbpm.persistence.util.LoggingPrintStream;
-import org.jbpm.test.JBPMJUnitTestCase;
+import org.jbpm.test.JbpmTestCase;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.kie.KieBase;
@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
  * This test costs time and resources, please only run locally for the time being.
  */
 @Ignore
-public class MultipleProcessesPerThreadTest extends JBPMJUnitTestCase {
+public class MultipleProcessesPerThreadTest extends JbpmTestCase {
     
     private static final int LOOPS = 1000;
     

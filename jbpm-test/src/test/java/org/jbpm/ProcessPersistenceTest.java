@@ -4,7 +4,7 @@ import javax.naming.InitialContext;
 import javax.transaction.UserTransaction;
 
 import org.jbpm.process.instance.impl.demo.DoNothingWorkItemHandler;
-import org.jbpm.test.JBPMJUnitTestCase;
+import org.jbpm.test.JbpmTestCase;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.kie.runtime.StatefulKnowledgeSession;
@@ -13,7 +13,7 @@ import org.kie.runtime.process.ProcessInstance;
 /**
  * This is a sample file to test a process.
  */
-public class ProcessPersistenceTest extends JBPMJUnitTestCase {
+public class ProcessPersistenceTest extends JbpmTestCase {
 
     public ProcessPersistenceTest() {
         super(true);

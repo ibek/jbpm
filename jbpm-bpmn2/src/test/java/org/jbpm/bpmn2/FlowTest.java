@@ -25,7 +25,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.jbpm.bpmn2.JbpmBpmn2TestCase.TestWorkItemHandler;
 import org.jbpm.process.instance.impl.demo.SystemOutWorkItemHandler;
-import org.jbpm.test.JBPMJUnitTestCase;
+import org.jbpm.test.JbpmTestCase;
 import org.jbpm.test.RequirePersistence;
 import org.junit.After;
 import org.junit.Before;
@@ -46,7 +46,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 @RunWith(CDITestRunner.class)
-public class FlowTest extends JBPMJUnitTestCase {
+public class FlowTest extends JbpmTestCase {
 
     @Inject
     @KBase("flow")

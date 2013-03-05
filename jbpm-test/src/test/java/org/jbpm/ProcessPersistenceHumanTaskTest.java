@@ -7,7 +7,7 @@ import javax.transaction.UserTransaction;
 
 import org.jbpm.task.TaskService;
 import org.jbpm.task.query.TaskSummary;
-import org.jbpm.test.JBPMJUnitTestCase;
+import org.jbpm.test.JbpmTestCase;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.kie.runtime.StatefulKnowledgeSession;
@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 /**
  * This is a sample file to test a process.
  */
-public class ProcessPersistenceHumanTaskTest extends JBPMJUnitTestCase {
+public class ProcessPersistenceHumanTaskTest extends JbpmTestCase {
 
     private Logger testLogger = LoggerFactory
             .getLogger(ProcessPersistenceHumanTaskTest.class);

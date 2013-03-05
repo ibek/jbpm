@@ -16,7 +16,7 @@ import org.drools.event.BeforeActivationFiredEvent;
 import org.drools.event.RuleFlowGroupActivatedEvent;
 import org.drools.event.RuleFlowGroupDeactivatedEvent;
 import org.drools.impl.StatefulKnowledgeSessionImpl;
-import org.jbpm.test.JBPMJUnitTestCase;
+import org.jbpm.test.JbpmTestCase;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -27,7 +27,7 @@ import org.kie.runtime.Environment;
 import org.kie.runtime.KieSessionConfiguration;
 import org.kie.runtime.StatefulKnowledgeSession;
 
-public class TimerCycleOnBinaryPackageTest extends JBPMJUnitTestCase {
+public class TimerCycleOnBinaryPackageTest extends JbpmTestCase {
 
     private static final String resDir = "manual/";
     

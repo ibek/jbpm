@@ -18,7 +18,7 @@ package org.jbpm.bpmn2;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jbpm.test.JBPMJUnitTestCase;
+import org.jbpm.test.JbpmTestCase;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -33,7 +33,7 @@ import org.kie.runtime.process.WorkflowProcessInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ManualTest extends JBPMJUnitTestCase {
+public class ManualTest extends JbpmTestCase {
 
     private StatefulKnowledgeSession ksession;
 

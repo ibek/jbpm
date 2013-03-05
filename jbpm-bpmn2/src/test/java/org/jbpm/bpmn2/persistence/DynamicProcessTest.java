@@ -7,7 +7,7 @@ import org.jbpm.compiler.xml.XmlRuleFlowProcessDumper;
 import org.jbpm.process.instance.impl.ProcessInstanceImpl;
 import org.jbpm.ruleflow.core.RuleFlowProcess;
 import org.jbpm.ruleflow.core.RuleFlowProcessFactory;
-import org.jbpm.test.JBPMJUnitTestCase;
+import org.jbpm.test.JbpmTestCase;
 import org.jbpm.workflow.core.impl.ConnectionImpl;
 import org.jbpm.workflow.core.impl.NodeImpl;
 import org.jbpm.workflow.core.node.HumanTaskNode;
@@ -29,7 +29,7 @@ import org.kie.runtime.StatefulKnowledgeSession;
 /**
  * This is a sample file to launch a process.
  */
-public class DynamicProcessTest extends JBPMJUnitTestCase {
+public class DynamicProcessTest extends JbpmTestCase {
 
     public DynamicProcessTest() {
         super(true);

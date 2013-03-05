@@ -21,7 +21,7 @@ import java.util.List;
 import org.drools.process.instance.impl.WorkItemImpl;
 import org.jbpm.bpmn2.JbpmBpmn2TestCase.TestWorkItemHandler;
 import org.jbpm.bpmn2.objects.Person;
-import org.jbpm.test.JBPMJUnitTestCase;
+import org.jbpm.test.JbpmTestCase;
 import org.jbpm.test.RequirePersistence;
 import org.junit.After;
 import org.junit.BeforeClass;
@@ -37,7 +37,7 @@ import org.kie.runtime.process.WorkItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StartTest extends JBPMJUnitTestCase {
+public class StartTest extends JbpmTestCase {
 
     private static final String startFolder = "start/";
 

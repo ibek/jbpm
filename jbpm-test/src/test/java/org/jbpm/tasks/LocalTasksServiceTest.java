@@ -23,7 +23,7 @@ import org.jbpm.task.service.SendIcal;
 import org.jbpm.task.service.TaskService;
 import org.jbpm.task.service.TaskServiceSession;
 import org.jbpm.task.service.local.LocalTaskService;
-import org.jbpm.test.JBPMJUnitTestCase;
+import org.jbpm.test.JbpmTestCase;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -37,7 +37,7 @@ import org.kie.runtime.process.ProcessInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class LocalTasksServiceTest extends JBPMJUnitTestCase {
+public class LocalTasksServiceTest extends JbpmTestCase {
 
     private static Logger logger = LoggerFactory
             .getLogger(LocalTasksServiceTest.class);

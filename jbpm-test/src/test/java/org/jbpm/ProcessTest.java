@@ -1,6 +1,6 @@
 package org.jbpm;
 
-import org.jbpm.test.JBPMJUnitTestCase;
+import org.jbpm.test.JbpmTestCase;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.kie.runtime.StatefulKnowledgeSession;
@@ -9,7 +9,7 @@ import org.kie.runtime.process.ProcessInstance;
 /**
  * This is a sample file to test a process.
  */
-public class ProcessTest extends JBPMJUnitTestCase {
+public class ProcessTest extends JbpmTestCase {
 
     @BeforeClass
     public static void setup() throws Exception {
