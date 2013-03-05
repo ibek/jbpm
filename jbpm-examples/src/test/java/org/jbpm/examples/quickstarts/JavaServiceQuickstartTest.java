@@ -13,7 +13,7 @@ import org.kie.runtime.StatefulKnowledgeSession;
 public class JavaServiceQuickstartTest extends JbpmJUnitTestCase {
 
 	@Test
-	public void testProcess() {
+	public void testProcess() throws Exception {
 		StatefulKnowledgeSession ksession = createKnowledgeSession("quickstarts/ScriptTask.bpmn");
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("person", new Person("krisv"));
