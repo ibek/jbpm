@@ -32,9 +32,6 @@ public class MultipleProcessesPerThreadTest extends JbpmTestCase {
     private static final int LOOPS = 1000;
     
     private static Logger logger = LoggerFactory.getLogger(MultipleProcessesPerThreadTest.class);
-    static { 
-        System.setOut(new LoggingPrintStream(System.out));
-    }
     
     @Test
     public void doMultipleProcessesInMultipleThreads() {
