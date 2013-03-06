@@ -19,16 +19,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.drools.process.instance.impl.WorkItemImpl;
-import org.jbpm.bpmn2.JbpmBpmn2TestCase.TestWorkItemHandler;
 import org.jbpm.bpmn2.objects.Person;
-import org.jbpm.test.JbpmTestCase;
-import org.jbpm.test.RequirePersistence;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.kie.KieBase;
-import org.kie.KnowledgeBase;
 import org.kie.event.process.DefaultProcessEventListener;
 import org.kie.event.process.ProcessStartedEvent;
 import org.kie.runtime.StatefulKnowledgeSession;

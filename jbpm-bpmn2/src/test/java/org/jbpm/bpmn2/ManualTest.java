@@ -18,14 +18,11 @@ package org.jbpm.bpmn2;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jbpm.test.JbpmTestCase;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.kie.KieBase;
-import org.kie.KnowledgeBase;
 import org.kie.event.process.DefaultProcessEventListener;
 import org.kie.event.process.ProcessStartedEvent;
 import org.kie.runtime.StatefulKnowledgeSession;

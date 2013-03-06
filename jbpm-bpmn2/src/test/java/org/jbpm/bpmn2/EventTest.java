@@ -33,8 +33,6 @@ import org.jbpm.bpmn2.objects.Person;
 import org.jbpm.process.instance.impl.ProcessInstanceImpl;
 import org.jbpm.process.instance.impl.demo.DoNothingWorkItemHandler;
 import org.jbpm.process.instance.impl.demo.SystemOutWorkItemHandler;
-import org.jbpm.test.JbpmTestCase;
-import org.jbpm.test.RequirePersistence;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;

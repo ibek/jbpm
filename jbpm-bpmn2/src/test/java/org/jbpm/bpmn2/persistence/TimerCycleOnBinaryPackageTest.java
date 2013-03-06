@@ -16,7 +16,7 @@ import org.drools.event.BeforeActivationFiredEvent;
 import org.drools.event.RuleFlowGroupActivatedEvent;
 import org.drools.event.RuleFlowGroupDeactivatedEvent;
 import org.drools.impl.StatefulKnowledgeSessionImpl;
-import org.jbpm.test.JbpmTestCase;
+import org.jbpm.bpmn2.JbpmTestCase;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;

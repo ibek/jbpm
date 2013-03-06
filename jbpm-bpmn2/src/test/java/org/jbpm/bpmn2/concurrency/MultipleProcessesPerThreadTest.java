@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
+import org.jbpm.bpmn2.JbpmTestCase;
 import org.jbpm.bpmn2.objects.Status;
 import org.jbpm.persistence.util.LoggingPrintStream;
-import org.jbpm.test.JbpmTestCase;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.kie.KieBase;

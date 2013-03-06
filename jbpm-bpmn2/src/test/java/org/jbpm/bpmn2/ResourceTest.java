@@ -17,7 +17,6 @@ package org.jbpm.bpmn2;
 
 import java.util.Properties;
 
-import org.jbpm.test.JbpmTestCase;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;

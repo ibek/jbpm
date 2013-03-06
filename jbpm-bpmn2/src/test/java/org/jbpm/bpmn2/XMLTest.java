@@ -32,7 +32,6 @@ import org.jbpm.bpmn2.xml.BPMNSemanticModule;
 import org.jbpm.bpmn2.xml.XmlBPMNProcessDumper;
 import org.jbpm.compiler.xml.XmlProcessReader;
 import org.jbpm.ruleflow.core.RuleFlowProcess;
-import org.jbpm.test.JbpmTestCase;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.kie.definition.process.Process;
