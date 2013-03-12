@@ -5,9 +5,7 @@ import static org.jbpm.persistence.util.PersistenceUtil.cleanUp;
 import static org.jbpm.persistence.util.PersistenceUtil.setupWithPoolingDataSource;
 import static org.kie.runtime.EnvironmentName.ENTITY_MANAGER_FACTORY;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.Reader;
 import java.util.Date;
 import java.util.HashMap;
@@ -21,18 +19,19 @@ import javax.persistence.Persistence;
 import org.drools.io.impl.ClassPathResource;
 import org.jbpm.persistence.objects.MockUserInfo;
 import org.jbpm.persistence.util.PersistenceUtil;
-import org.jbpm.process.workitem.wsht.LocalHTWorkItemHandler;
-import org.jbpm.task.AccessType;
+import org.jbpm.process.workitem.wsht.HornetQHTWorkItemHandler;
 import org.jbpm.task.Group;
+import org.jbpm.task.TaskService;
 import org.jbpm.task.User;
 import org.jbpm.task.identity.DefaultUserGroupCallbackImpl;
 import org.jbpm.task.identity.UserGroupCallbackManager;
 import org.jbpm.task.query.TaskSummary;
-import org.jbpm.task.service.ContentData;
 import org.jbpm.task.service.SendIcal;
-import org.jbpm.task.service.TaskService;
+import org.jbpm.task.service.SyncTaskServiceWrapper;
 import org.jbpm.task.service.TaskServiceSession;
-import org.jbpm.task.service.local.LocalTaskService;
+import org.jbpm.task.service.hornetq.AsyncHornetQTaskClient;
+import org.jbpm.task.service.hornetq.HornetQTaskServer;
+import org.jbpm.task.utils.OnErrorAction;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -52,23 +51,25 @@ import org.kie.runtime.StatefulKnowledgeSession;
 import org.kie.runtime.process.ProcessInstance;
 import org.mvel2.MVEL;
 import org.mvel2.ParserContext;
+import org.mvel2.compiler.ExpressionCompiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class LocalTasksServiceTest {
+public class HornetQTasksServiceTest {
 
-    private static Logger logger = LoggerFactory.getLogger(LocalTasksServiceTest.class);
+    private static Logger logger = LoggerFactory
+            .getLogger(HornetQTasksServiceTest.class);
     private HashMap<String, Object> context;
     private EntityManagerFactory emf;
-    private EntityManagerFactory emfDomain;
     private EntityManagerFactory emfTasks;
     protected Map<String, User> users;
     protected Map<String, Group> groups;
-    protected TaskService taskService;
-    protected LocalTaskService localTaskService;
+    protected org.jbpm.task.service.TaskService taskService;
+    protected org.jbpm.task.TaskService hornetQTaskService;
     protected TaskServiceSession taskSession;
     protected MockUserInfo userInfo;
     protected Properties conf;
+    protected HornetQTaskServer hornetQTaskServer;
 
     @Before
     public void setUp() throws Exception {
@@ -84,28 +85,29 @@ public class LocalTasksServiceTest {
 
         SendIcal.initInstance(conf);
 
-
         emfTasks = Persistence.createEntityManagerFactory("org.jbpm.task");
 
         userInfo = new MockUserInfo();
 
-        taskService = new TaskService(emfTasks, SystemEventListenerFactory.getSystemEventListener(), null);
+        taskService = new org.jbpm.task.service.TaskService(emfTasks,
+                SystemEventListenerFactory.getSystemEventListener(), null);
         taskSession = taskService.createSession();
 
         taskService.setUserinfo(userInfo);
 
-        localTaskService = new LocalTaskService(taskService);
-
-        UserGroupCallbackManager.getInstance().setCallback(new DefaultUserGroupCallbackImpl("classpath:/usergroups.properties"));
     }
 
     @After
     public void tearDown() throws Exception {
         cleanUp(context);
 
-        if (localTaskService != null) {
-            System.out.println("Disposing Local Task Service session");
-            localTaskService.disconnect();
+        if (hornetQTaskService != null) {
+            System.out.println("Disposing HornetQ Task Service session");
+            hornetQTaskService.disconnect();
+        }
+        if (hornetQTaskServer != null) {
+            hornetQTaskServer.stop();
+            hornetQTaskServer = null;
         }
         if (taskSession != null) {
             System.out.println("Disposing session");
@@ -119,44 +121,52 @@ public class LocalTasksServiceTest {
     @Test
     public void groupTaskQueryTest() throws Exception {
 
-    	Properties userGroups = new Properties();
+        Properties userGroups = new Properties();
         userGroups.setProperty("salaboy", "");
         userGroups.setProperty("john", "PM");
         userGroups.setProperty("mary", "HR");
-        
-        UserGroupCallbackManager.getInstance().setCallback(new DefaultUserGroupCallbackImpl(userGroups));
 
         Environment env = createEnvironment();
         KnowledgeBase kbase = createKnowledgeBase("Evaluation2.bpmn");
         StatefulKnowledgeSession ksession = createSession(kbase, env);
         KnowledgeRuntimeLoggerFactory.newConsoleLogger(ksession);
-        LocalHTWorkItemHandler htHandler = new LocalHTWorkItemHandler(localTaskService, ksession);
-        htHandler.setLocal(true);
-        ksession.getWorkItemManager().registerWorkItemHandler("Human Task", htHandler);
+        hornetQTaskService = getHornetQTaskService(ksession);
+
+        UserGroupCallbackManager.getInstance().setCallback(
+                new DefaultUserGroupCallbackImpl(userGroups));
+        
         logger.info("### Starting process ###");
         Map<String, Object> parameters = new HashMap<String, Object>();
         parameters.put("employee", "salaboy");
-        ProcessInstance process = ksession.startProcess("com.sample.evaluation", parameters);
-        long processInstanceId = process.getId();
+        ProcessInstance processInstance = ksession.startProcess(
+                "com.sample.evaluation", parameters);
 
-        //The process is in the first Human Task waiting for its completion
-        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
+        // The process is in the first Human Task waiting for its completion
+        Assert.assertTrue(processInstance.getState() == ProcessInstance.STATE_ACTIVE ||
+                processInstance.getState() == ProcessInstance.STATE_PENDING);
+        
+        hornetQTaskService.connect("127.0.0.1", 5153);
 
-        //gets salaboy's tasks
-        List<TaskSummary> salaboysTasks = this.localTaskService.getTasksAssignedAsPotentialOwner("salaboy", "en-UK");
+        // gets salaboy's tasks
+        List<TaskSummary> salaboysTasks = hornetQTaskService
+                .getTasksAssignedAsPotentialOwner("salaboy", "en-UK");
         Assert.assertEquals(1, salaboysTasks.size());
 
+        hornetQTaskService.start(salaboysTasks.get(0).getId(), "salaboy");
 
-        this.localTaskService.start(salaboysTasks.get(0).getId(), "salaboy");
+        hornetQTaskService.complete(salaboysTasks.get(0).getId(), "salaboy",
+                null);
 
-        this.localTaskService.complete(salaboysTasks.get(0).getId(), "salaboy", null);
-
-        List<TaskSummary> pmsTasks = this.localTaskService.getTasksAssignedAsPotentialOwner("john", "en-UK");
+        System.out.println("Task completion requires some time.");
+        Thread.sleep(3000);
+        
+        List<TaskSummary> pmsTasks = hornetQTaskService
+                .getTasksAssignedAsPotentialOwner("john", "en-UK");
 
         Assert.assertEquals(1, pmsTasks.size());
 
-
-        List<TaskSummary> hrsTasks = this.localTaskService.getTasksAssignedAsPotentialOwner("mary", "en-UK");
+        List<TaskSummary> hrsTasks = hornetQTaskService
+                .getTasksAssignedAsPotentialOwner("mary", "en-UK");
 
         Assert.assertEquals(1, hrsTasks.size());
 
@@ -229,30 +239,29 @@ public class LocalTasksServiceTest {
         return MVEL.executeExpression(MVEL.compileExpression(str, context),
                 vars);
     }
-
-    /**
-     * Convert a Map<String, Object> into a ContentData object.
-     *
-     * @param data
-     * @return
-     */
-    private ContentData prepareContentData(Map data) {
-        ContentData contentData = null;
-        if (data != null) {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            ObjectOutputStream out;
-            try {
-                out = new ObjectOutputStream(bos);
-                out.writeObject(data);
-                out.close();
-                contentData = new ContentData();
-                contentData.setContent(bos.toByteArray());
-                contentData.setAccessType(AccessType.Inline);
-            } catch (IOException e) {
-                System.err.print(e);
-            }
+    
+    public TaskService getHornetQTaskService(StatefulKnowledgeSession ksession) {
+        if (hornetQTaskServer == null) {
+            startHornetQTaskService();
         }
-
-        return contentData;
+        
+        UserGroupCallbackManager.getInstance().setCallback(
+                new DefaultUserGroupCallbackImpl(
+                        "classpath:/usergroups.properties"));
+        HornetQHTWorkItemHandler humanTaskHandler = new HornetQHTWorkItemHandler(ksession, OnErrorAction.RETHROW);
+        ksession.getWorkItemManager().registerWorkItemHandler("Human Task", humanTaskHandler);
+        TaskService taskService = new SyncTaskServiceWrapper(new AsyncHornetQTaskClient("hornetQTaskClient"));
+        return taskService;
     }
+    
+    public org.jbpm.task.service.TaskService startHornetQTaskService() {
+        if (taskService == null) {
+            taskService = new org.jbpm.task.service.TaskService(emfTasks, SystemEventListenerFactory.getSystemEventListener());
+        }
+        hornetQTaskServer = new HornetQTaskServer(taskService, 5153);
+        Thread thread = new Thread(hornetQTaskServer);
+        thread.start();
+        return taskService;
+    }
+
 }
